@@ -138,6 +138,7 @@
     }
     .peer-input:focus { border-color: #3498db; }
 
+    /* Conteneur Vidéo principal */
     .video-container {
       position: relative;
       width: 100%;
@@ -147,12 +148,113 @@
       overflow: hidden;
       margin-bottom: 15px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      transition: height 0.3s ease, border-radius 0.3s ease;
+      display: flex;
     }
-    #remote-video { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Support pour le Mode Cinéma */
+    .video-container.cinema-mode {
+      height: 60vh;
+      max-height: 500px;
+    }
+
+    /* Support du Plein Écran */
+    .video-container:fullscreen,
+    .video-container:-webkit-full-screen {
+      width: 100vw;
+      height: 100vh;
+      max-height: none;
+      border-radius: 0;
+      margin: 0;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+
+    /* Mode Normal (PiP) */
+    #remote-video { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      transition: width 0.3s ease;
+    }
+    
     #local-video {
-      position: absolute; bottom: 10px; right: 10px;
-      width: 80px; height: 110px; object-fit: cover;
-      border-radius: 8px; border: 2px solid #fff;
+      position: absolute; 
+      bottom: 50px; 
+      right: 10px;
+      width: 80px; 
+      height: 110px; 
+      object-fit: cover;
+      border-radius: 8px; 
+      border: 2px solid #fff;
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+
+    /* Mode Split Screen (50/50) */
+    .video-container.split-mode #remote-video {
+      width: 50%;
+      border-right: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .video-container.split-mode #local-video {
+      position: relative;
+      bottom: auto;
+      right: auto;
+      width: 50%;
+      height: 100%;
+      border-radius: 0;
+      border: none;
+      z-index: 1;
+    }
+
+    /* Barre d'outils vidéo en bas */
+    .video-controls-bar {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      background: rgba(18, 18, 18, 0.75);
+      padding: 6px 14px;
+      border-radius: 30px;
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .v-btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .v-btn:active {
+      transform: scale(0.9);
+    }
+
+    .v-btn.muted {
+      background-color: #e74c3c !important;
+    }
+
+    .v-btn.active-mode {
+      background-color: #3498db !important;
     }
 
     .btn {
@@ -233,9 +335,20 @@
     </div>
 
     <!-- Zone Visioconférence -->
-    <div class="video-container">
-      <video id="remote-video" autoplay playsinline></video>
-      <video id="local-video" autoplay playsinline muted></video>
+    <div id="video-container" class="video-container">
+      <div class="video-wrapper">
+        <video id="remote-video" autoplay playsinline></video>
+        <video id="local-video" autoplay playsinline muted></video>
+      </div>
+
+      <!-- Barre de contrôle intégrée en bas de la vidéo -->
+      <div class="video-controls-bar">
+        <button id="btn-toggle-mic" class="v-btn" onclick="toggleMic()" title="Couper/Activer le micro">🎤</button>
+        <button id="btn-toggle-audio" class="v-btn" onclick="toggleAudio()" title="Couper/Activer le haut-parleur">🔊</button>
+        <button id="btn-toggle-split" class="v-btn" onclick="toggleSplit()" title="Écran séparé 50/50">🔲</button>
+        <button id="btn-toggle-cinema" class="v-btn" onclick="toggleCinema()" title="Mode Cinéma">🎬</button>
+        <button id="btn-toggle-fs" class="v-btn" onclick="toggleFullscreen()" title="Plein écran">⛶</button>
+      </div>
     </div>
 
     <!-- Bouton d'appel -->
@@ -308,6 +421,9 @@
     let peer = null;
     let dataConn = null;
     let localStream = null;
+
+    let isMicMuted = false;
+    let isAudioMuted = false;
 
     function triggerHaptic() {
       if (navigator.vibrate) {
@@ -411,6 +527,11 @@
         });
         document.getElementById('local-video').srcObject = localStream;
 
+        // Réinitialiser le Mute du micro si précédemment activé
+        if (isMicMuted) {
+          localStream.getAudioTracks().forEach(track => track.enabled = false);
+        }
+
         updateStatus('orange', 'Appel en cours...');
         callBtn.style.backgroundColor = "#e67e22";
         callBtn.textContent = "🔄 Connexion visio...";
@@ -419,7 +540,10 @@
 
         mediaCall.on('stream', (remoteStream) => {
           console.log("Flux vidéo distant reçu !");
-          document.getElementById('remote-video').srcObject = remoteStream;
+          const remoteVideo = document.getElementById('remote-video');
+          remoteVideo.srcObject = remoteStream;
+          remoteVideo.muted = isAudioMuted;
+
           updateStatus('green', 'Visio en cours');
           callBtn.style.backgroundColor = "#c0392b";
           callBtn.textContent = "🛑 Raccrocher";
@@ -436,6 +560,91 @@
       }
     }
 
+    /* --- Contrôles Visio --- */
+
+    function toggleMic() {
+      triggerHaptic();
+      isMicMuted = !isMicMuted;
+      
+      if (localStream && localStream.getAudioTracks().length > 0) {
+        localStream.getAudioTracks().forEach(track => track.enabled = !isMicMuted);
+      }
+
+      const btn = document.getElementById('btn-toggle-mic');
+      btn.textContent = isMicMuted ? '🎙️' : '🎤';
+      btn.classList.toggle('muted', isMicMuted);
+    }
+
+    function toggleAudio() {
+      triggerHaptic();
+      isAudioMuted = !isAudioMuted;
+      
+      const remoteVideo = document.getElementById('remote-video');
+      remoteVideo.muted = isAudioMuted;
+
+      const btn = document.getElementById('btn-toggle-audio');
+      btn.textContent = isAudioMuted ? '🔇' : '🔊';
+      btn.classList.toggle('muted', isAudioMuted);
+    }
+
+    function toggleSplit() {
+      triggerHaptic();
+      const videoContainer = document.getElementById('video-container');
+      videoContainer.classList.toggle('split-mode');
+
+      const btn = document.getElementById('btn-toggle-split');
+      btn.classList.toggle('active-mode', videoContainer.classList.contains('split-mode'));
+    }
+
+    function toggleCinema() {
+      triggerHaptic();
+      const videoContainer = document.getElementById('video-container');
+      
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        exitFullscreen();
+      }
+
+      videoContainer.classList.toggle('cinema-mode');
+
+      const btn = document.getElementById('btn-toggle-cinema');
+      btn.classList.toggle('active-mode', videoContainer.classList.contains('cinema-mode'));
+    }
+
+    function toggleFullscreen() {
+      triggerHaptic();
+      const videoContainer = document.getElementById('video-container');
+
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (videoContainer.requestFullscreen) {
+          videoContainer.requestFullscreen();
+        } else if (videoContainer.webkitRequestFullscreen) {
+          videoContainer.webkitRequestFullscreen();
+        }
+      } else {
+        exitFullscreen();
+      }
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+
+    // Mise à jour de l'état du bouton plein écran
+    document.addEventListener('fullscreenchange', handleFSChange);
+    document.addEventListener('webkitfullscreenchange', handleFSChange);
+
+    function handleFSChange() {
+      const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const btn = document.getElementById('btn-toggle-fs');
+      btn.classList.toggle('active-mode', isFS);
+    }
+
+    /* --- Commandes Télécommande Bbox --- */
+
     function sendBboxCmd(cmd) {
       triggerHaptic();
       if (dataConn && dataConn.open) {
@@ -446,7 +655,6 @@
       }
     }
 
-    // Fonction dédiée pour envoyer le pairing
     function sendPairing() {
       triggerHaptic();
       const input = document.getElementById('pairing-input');
@@ -455,8 +663,8 @@
       if (dataConn && dataConn.open) {
         dataConn.send({ type: 'cmd', value: 'send_pairing', payload: textVal });
         console.log("Pairing envoyé avec le texte :", textVal);
-        input.value = ''; // Réinitialiser le champ
-        toggleSettings(); // Fermer la modale (optionnel)
+        input.value = '';
+        toggleSettings();
       } else {
         alert("La télécommande n'est pas encore connectée.");
       }
