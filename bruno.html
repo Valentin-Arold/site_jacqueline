@@ -4,8 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Télécommande Bruno</title>
+  <title>Télécommande & Visio Bbox</title>
 
+  <!-- Bibliothèque PeerJS -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
@@ -15,18 +16,20 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background-color: #121212;
       color: #ffffff;
       margin: 0;
-      padding: 50px 15px 15px 15px;
+      padding: 60px 15px 25px 15px;
       display: flex;
       flex-direction: column;
       align-items: center;
       user-select: none;
       -webkit-user-select: none;
+      min-height: 100vh;
     }
 
+    /* En-tête fixe en haut à gauche */
     .top-status-header {
       position: fixed;
       top: 12px;
@@ -35,38 +38,42 @@
       align-items: center;
       gap: 8px;
       z-index: 100;
-      background: rgba(18, 18, 18, 0.85);
-      padding: 6px 12px;
+      background: rgba(25, 25, 25, 0.85);
+      padding: 8px 14px;
       border-radius: 20px;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    /* Bouton Paramètres en haut à droite */
     .settings-btn {
       position: fixed;
       top: 12px;
       right: 12px;
-      background: rgba(18, 18, 18, 0.85);
+      background: rgba(25, 25, 25, 0.85);
       color: white;
-      border: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.2em;
       cursor: pointer;
       z-index: 100;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-      transition: transform 0.2s;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      transition: transform 0.2s, background-color 0.2s;
     }
 
     .settings-btn:active {
       transform: scale(0.9);
+      background: rgba(40, 40, 40, 0.95);
     }
 
+    /* Modale des paramètres */
     .settings-modal {
       display: none;
       position: fixed;
@@ -74,32 +81,52 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.82);
       z-index: 200;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(5px);
+      backdrop-filter: blur(6px);
+      padding: 15px;
     }
 
     .settings-content {
       background: #1e1e1e;
-      padding: 20px;
-      border-radius: 16px;
-      width: 90%;
+      padding: 22px;
+      border-radius: 20px;
+      width: 100%;
       max-width: 380px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      max-height: 85vh;
+      gap: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .settings-section {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .settings-section-title {
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #aaa;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-weight: 700;
     }
 
     .close-settings {
-      background-color: #555;
-      margin-top: 10px;
+      background-color: #333;
+      margin-top: 5px;
     }
 
+    /* Voyant LED */
     .led-indicator {
       width: 12px;
       height: 12px;
@@ -110,9 +137,20 @@
       transition: background-color 0.3s, box-shadow 0.3s;
     }
 
-    .led-red { background-color: #e74c3c; box-shadow: 0 0 8px rgba(231, 76, 60, 0.8); }
-    .led-orange { background-color: #f39c12; box-shadow: 0 0 8px rgba(243, 156, 18, 0.8); }
-    .led-green { background-color: #2ecc71; box-shadow: 0 0 8px rgba(46, 204, 113, 0.8); }
+    .led-red {
+      background-color: #e74c3c;
+      box-shadow: 0 0 8px rgba(231, 76, 60, 0.8);
+    }
+
+    .led-orange {
+      background-color: #f39c12;
+      box-shadow: 0 0 8px rgba(243, 156, 18, 0.8);
+    }
+
+    .led-green {
+      background-color: #2ecc71;
+      box-shadow: 0 0 8px rgba(46, 204, 113, 0.8);
+    }
 
     .status-text {
       font-size: 0.85em;
@@ -125,51 +163,100 @@
       max-width: 420px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
-    }
-
-    .section-card {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 16px;
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-    }
-
-    .section-title {
-      margin-top: 0;
-      text-align: center;
-      margin-bottom: 15px;
-      font-size: 1.15em;
-      color: #3498db;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 8px;
+      gap: 14px;
     }
 
     .peer-config-row {
       display: flex;
       gap: 10px;
-      margin-bottom: 15px;
     }
 
-    .peer-input {
+    .peer-input,
+    .select-input {
       flex: 1;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 10px;
       color: #fff;
-      padding: 10px;
-      font-size: 0.9em;
+      padding: 12px;
+      font-size: 0.95em;
       outline: none;
+      transition: border-color 0.2s;
     }
 
+    .peer-input:focus,
+    .select-input:focus {
+      border-color: #3498db;
+    }
+
+    .select-input option {
+      background: #1e1e1e;
+      color: #fff;
+    }
+
+    .category-card {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: border-color 0.2s;
+    }
+
+    .category-header {
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.05em;
+      user-select: none;
+    }
+
+    .category-header:active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .category-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chevron-icon {
+      transition: transform 0.3s ease;
+      font-size: 0.8em;
+      opacity: 0.7;
+    }
+
+    .category-card.open .chevron-icon {
+      transform: rotate(180deg);
+    }
+
+    .category-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease-out, padding 0.35s ease-out;
+      padding: 0 16px;
+    }
+
+    .category-card.open .category-body {
+      max-height: 1400px;
+      padding: 16px;
+    }
+
+    /* Composants Vidéo */
     .video-container {
       position: relative;
       width: 100%;
       height: 200px;
       background-color: #000;
-      border-radius: 16px;
+      border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
     }
 
     #remote-video {
@@ -182,62 +269,101 @@
       position: absolute;
       bottom: 10px;
       right: 10px;
-      width: 80px;
-      height: 110px;
+      width: 75px;
+      height: 100px;
       object-fit: cover;
       border-radius: 8px;
       border: 2px solid #fff;
     }
 
+    /* Boutons et éléments interactifs */
     .btn {
-      background-color: rgba(255, 255, 255, 0.15);
+      background-color: rgba(255, 255, 255, 0.12);
       color: #fff;
-      border: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       padding: 12px;
       border-radius: 10px;
       cursor: pointer;
       font-weight: 600;
       font-size: 0.95em;
-      transition: background 0.1s, transform 0.1s;
+      transition: background-color 0.15s, transform 0.1s, border-color 0.15s;
       touch-action: manipulation;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
     }
 
     .btn:active {
-      background-color: rgba(255, 255, 255, 0.35);
+      background-color: rgba(255, 255, 255, 0.28);
       transform: scale(0.96);
     }
 
-    .btn-connect { background-color: #3498db; padding: 0 15px; }
-    .btn-call { width: 100%; background-color: #27ae60; padding: 14px; font-size: 1.05em; }
-    .btn-power { background-color: #e74c3c; width: 100%; }
-    .btn-restart-app { background-color: #e74c3c; width: 100%; margin-top: 16px; }
+    .btn-connect {
+      background-color: #3498db;
+      padding: 0 16px;
+      font-size: 0.9em;
+    }
+
+    .btn-call {
+      width: 100%;
+      background-color: #27ae60;
+      padding: 14px;
+      font-size: 1.05em;
+    }
+
+    .btn-power {
+      background-color: #e74c3c;
+      width: 100%;
+    }
+
+    .btn-restart-app {
+      background-color: #d35400;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn-learn {
+      background-color: #8e44ad;
+      width: 100%;
+      margin-top: 6px;
+    }
 
     .grid-row {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
-    .grid-row .btn { flex: 1; }
+    .grid-row .btn {
+      flex: 1;
+    }
 
     .dpad-container {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      max-width: 240px;
-      margin: 15px auto;
+      max-width: 230px;
+      margin: 12px auto;
     }
 
-    .btn-ok { background-color: #2980b9; font-weight: bold; }
+    .btn-ok {
+      background-color: #2980b9;
+      font-weight: bold;
+    }
 
     .grid-channels {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .grid-numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
       margin-bottom: 12px;
     }
 
@@ -257,194 +383,396 @@
       text-align: center;
       font-weight: bold;
       outline: none;
-      padding: 8px;
+      padding: 10px;
     }
 
-    .learn-select {
-      width: 100%;
-      padding: 10px;
-      background: #2a2a2a;
+    .channel-input:focus {
+      border-color: #3498db;
+    }
+
+    .btn-send {
+      background-color: #3498db;
+      padding: 0 18px;
+    }
+
+    /* Notification Box personnalisée pour remplacer alert/confirm */
+    .notification-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(30, 30, 30, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: #fff;
-      border: 1px solid #444;
-      border-radius: 8px;
+      padding: 12px 20px;
+      border-radius: 25px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      z-index: 300;
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+      font-size: 0.9em;
+      text-align: center;
+      pointer-events: none;
+      max-width: 90%;
+    }
+
+    .notification-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .media-meta {
+      font-size: 0.9em;
+      color: #ccc;
+      text-align: center;
+      min-height: 1.2em;
+      margin-bottom: 8px;
+    }
+
+    .media-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8em;
+      color: #aaa;
+      margin-top: 4px;
+    }
+
+    .range-input {
+      width: 100%;
+      accent-color: #3498db;
+    }
+
+    .video-file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 160px;
+      overflow-y: auto;
       margin-bottom: 10px;
+    }
+
+    .video-file-btn {
+      width: 100%;
+      justify-content: flex-start;
+      text-align: left;
+      font-size: 0.88em;
+    }
+
+    .video-file-btn.active {
+      border-color: #3498db;
+      background: rgba(52, 152, 219, 0.25);
+    }
+
+    .hint {
+      font-size: 0.78em;
+      color: #999;
+      line-height: 1.35;
+      margin: 0 0 10px 0;
     }
   </style>
 </head>
 
 <body>
 
+  <!-- Statut et Voyant LED ancrés tout en haut à gauche -->
   <div class="top-status-header">
-    <div id="status-led" class="led-indicator led-red"></div>
+    <div id="status-led" class="led-indicator led-red" title="État de la connexion"></div>
     <span id="peer-status" class="status-text">Déconnecté</span>
   </div>
 
-  <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+  <!-- Bouton Paramètres ancré en haut à droite -->
+  <button class="settings-btn" onclick="toggleSettings()" aria-label="Paramètres">⚙️</button>
 
-  <!-- Modale des parametres -->
+  <!-- Modale des paramètres -->
   <div id="settings-modal" class="settings-modal">
     <div class="settings-content">
-      <h3 style="margin-top: 0; text-align: center;">Paramètres</h3>
+      <h3 style="margin: 0; text-align: center;">⚙️ Paramètres</h3>
 
-      <button onclick="sendBboxCmd('reset_cert')" class="btn" style="background-color: #d35400;">🔄 Reset Cert Bbox</button>
-
-      <div style="display: flex; gap: 10px;">
-        <input type="text" id="pairing-input" class="peer-input" placeholder="Code Pairing Bbox">
-        <button onclick="sendPairing()" class="btn btn-connect">Pairing</button>
+      <!-- Section Capture IR -->
+      <div class="settings-section">
+        <h4 class="settings-section-title">📡 Capture IR via RM4</h4>
+        <p class="hint">Le RM4 capte le signal de la télécommande physique. Node.js l'enregistre puis le rejoue. Rien
+          n'est "appris" dans l'appli Broadlink.</p>
+        <label for="learn-key-select" style="font-size: 0.85em; color: #ccc; display: block; margin-bottom: 6px;">Touche
+          à capturer :</label>
+        <select id="learn-key-select" class="select-input" style="width: 100%; margin-bottom: 10px;">
+          <option value="tv_power">🔴 TV Power</option>
+          <option value="tv_input">🔌 Input / Source</option>
+          <option value="tv_menu">📋 Menu</option>
+          <option value="tv_return">🔙 Retour</option>
+          <option value="tv_ok">🆗 OK</option>
+          <option value="tv_up">▲ Flèche Haut</option>
+          <option value="tv_down">▼ Flèche Bas</option>
+          <option value="tv_left">◄ Flèche Gauche</option>
+          <option value="tv_right">► Flèche Droite</option>
+          <option value="tv_vol_up">🔊 Vol +</option>
+          <option value="tv_vol_down">🔈 Vol -</option>
+          <option value="tv_mute">🔇 Mute</option>
+          <option value="tv_0">0</option>
+          <option value="tv_1">1</option>
+          <option value="tv_2">2</option>
+          <option value="tv_3">3</option>
+          <option value="tv_4">4</option>
+          <option value="tv_5">5</option>
+          <option value="tv_6">6</option>
+          <option value="tv_7">7</option>
+          <option value="tv_8">8</option>
+          <option value="tv_9">9</option>
+        </select>
+        <button onclick="startKeyLearning()" class="btn btn-learn">📡 Capturer ce code IR</button>
+        <div id="learned-keys" class="hint" style="margin-top:10px;"></div>
       </div>
 
-      <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;">
+      <!-- Section Appareil & Pairing -->
+      <div class="settings-section">
+        <h4 class="settings-section-title">🔗 Association & Certificat</h4>
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <input type="text" id="pairing-input" class="peer-input" placeholder="Texte de pairing">
+          <button onclick="sendPairing()" class="btn btn-connect">Pairing</button>
+        </div>
+        <button onclick="sendBboxCmd('reset_cert')" class="btn" style="background-color: #d35400; width: 100%;">🔄 Reset
+          Certificats</button>
+      </div>
 
-      <h4 style="margin: 0; text-align: center;">🎓 Apprentissage IR TV Salon</h4>
-      <p style="font-size: 0.8em; color: #aaa; text-align: center; margin: 0;">Sélectionnez une touche à enregistrer.</p>
-
-      <select id="learn-btn-select" class="learn-select">
-        <option value="tv_power">Bouton Power TV</option>
-        <option value="tv_1">Bouton 1</option>
-        <option value="tv_2">Bouton 2</option>
-        <option value="tv_3">Bouton 3</option>
-        <option value="tv_4">Bouton 4</option>
-        <option value="tv_5">Bouton 5</option>
-        <option value="tv_6">Bouton 6</option>
-        <option value="tv_7">Bouton 7</option>
-        <option value="tv_8">Bouton 8</option>
-        <option value="tv_9">Bouton 9</option>
-        <option value="tv_0">Bouton 0</option>
-        <option value="tv_up">Flèche Haut</option>
-        <option value="tv_down">Flèche Bas</option>
-        <option value="tv_left">Flèche Gauche</option>
-        <option value="tv_right">Flèche Droite</option>
-        <option value="tv_ok">Bouton OK</option>
-        <option value="tv_input">Bouton Input / Source</option>
-        <option value="tv_menu">Bouton Menu</option>
-      </select>
-
-      <button onclick="startBroadlinkLearn()" class="btn" style="background-color: #8e44ad;">📡 Apprendre la touche</button>
-
+      <!-- Bouton Fermer -->
       <button onclick="toggleSettings()" class="btn close-settings">Fermer</button>
     </div>
   </div>
 
   <div class="container">
 
-    <!-- CATÉGORIE 1 : VISIO -->
-    <div class="section-card">
-      <h3 class="section-title">📹 Visio</h3>
-
-      <div class="peer-config-row">
-        <input type="text" id="peer-id-input" class="peer-input" placeholder="ID Cible" value="reveil-ubuntu-bbox">
-        <button onclick="saveAndConnect()" class="btn btn-connect">Connexion</button>
-      </div>
-
-      <div class="video-container">
-        <video id="remote-video" autoplay playsinline></video>
-        <video id="local-video" autoplay playsinline muted></video>
-      </div>
-
-      <button id="call-btn" onclick="startCall()" class="btn btn-call">📞 Lancer la Visio</button>
+    <!-- Configuration ID PeerJS distant -->
+    <div class="peer-config-row">
+      <input type="text" id="peer-id-input" class="peer-input" placeholder="ID Cible (ex: reveil-ubuntu-bbox)"
+        value="reveil-ubuntu-bbox">
+      <button onclick="saveAndConnect()" class="btn btn-connect">Connexion</button>
     </div>
 
-    <!-- CATÉGORIE 2 : TÉLÉCOMMANDE BBOX -->
-    <div class="section-card">
-      <h3 class="section-title">📺 Télécommande Bbox</h3>
-
-      <div class="grid-row">
-        <button onclick="sendBboxCmd('power')" class="btn btn-power">🔴 On / Veille</button>
+    <!-- Catégorie 1: Visio -->
+    <div class="category-card open" id="cat-visio">
+      <div class="category-header" onclick="toggleCategory('cat-visio')">
+        <div class="category-title">
+          <span>📹</span> Visio
+        </div>
+        <span class="chevron-icon">▼</span>
       </div>
-
-      <div class="dpad-container">
-        <div></div>
-        <button onclick="sendBboxCmd('up')" class="btn">▲</button>
-        <div></div>
-        <button onclick="sendBboxCmd('left')" class="btn">◄</button>
-        <button onclick="sendBboxCmd('ok')" class="btn btn-ok">OK</button>
-        <button onclick="sendBboxCmd('right')" class="btn">►</button>
-        <div></div>
-        <button onclick="sendBboxCmd('down')" class="btn">▼</button>
-        <div></div>
+      <div class="category-body">
+        <div class="video-container">
+          <video id="remote-video" autoplay playsinline></video>
+          <video id="local-video" autoplay playsinline muted></video>
+        </div>
+        <button id="call-btn" onclick="startCall()" class="btn btn-call">📞 Lancer la Visio</button>
       </div>
-
-      <div class="grid-row">
-        <button onclick="sendBboxCmd('vol_down')" class="btn">🔈 Vol -</button>
-        <button onclick="sendBboxCmd('mute')" class="btn">🔇 Mute</button>
-        <button onclick="sendBboxCmd('vol_up')" class="btn">🔊 Vol +</button>
-      </div>
-
-      <div class="grid-channels">
-        <button onclick="changeBboxChannel('1')" class="btn">TF1</button>
-        <button onclick="changeBboxChannel('2')" class="btn">France 2</button>
-        <button onclick="changeBboxChannel('3')" class="btn">France 3</button>
-        <button onclick="changeBboxChannel('5')" class="btn">Arte</button>
-        <button onclick="changeBboxChannel('6')" class="btn">M6</button>
-        <button onclick="changeBboxChannel('12')" class="btn">NRJ12</button>
-      </div>
-
-      <div class="custom-channel-row">
-        <input type="number" id="custom-channel" class="channel-input" value="1" min="1" max="999" inputmode="numeric">
-        <button onclick="sendCustomChannel()" class="btn btn-connect">OK</button>
-      </div>
-
-      <button onclick="restartApp()" class="btn btn-restart-app">🔄 Redémarrer l'application</button>
     </div>
 
-    <!-- CATÉGORIE 3 : TÉLÉCOMMANDE TV SALON -->
-    <div class="section-card">
-      <h3 class="section-title">📺 Télécommande TV Salon</h3>
-
-      <div class="grid-row">
-        <button onclick="sendBroadlinkCmd('tv_power')" class="btn btn-power">🔴 Power TV</button>
+    <!-- Catégorie: Vidéo sur le réveil uniquement -->
+    <div class="category-card" id="cat-media">
+      <div class="category-header" onclick="toggleCategory('cat-media')">
+        <div class="category-title">
+          <span>🎬</span> Vidéo sur le réveil
+        </div>
+        <span class="chevron-icon">▼</span>
       </div>
-
-      <!-- Pavé numérique 1-9 -->
-      <div class="grid-channels">
-        <button onclick="sendBroadlinkCmd('tv_1')" class="btn">1</button>
-        <button onclick="sendBroadlinkCmd('tv_2')" class="btn">2</button>
-        <button onclick="sendBroadlinkCmd('tv_3')" class="btn">3</button>
-        <button onclick="sendBroadlinkCmd('tv_4')" class="btn">4</button>
-        <button onclick="sendBroadlinkCmd('tv_5')" class="btn">5</button>
-        <button onclick="sendBroadlinkCmd('tv_6')" class="btn">6</button>
-        <button onclick="sendBroadlinkCmd('tv_7')" class="btn">7</button>
-        <button onclick="sendBroadlinkCmd('tv_8')" class="btn">8</button>
-        <button onclick="sendBroadlinkCmd('tv_9')" class="btn">9</button>
+      <div class="category-body">
+        <p class="hint">La vidéo et le son passent uniquement sur l'écran du réveil. Ici ce n'est qu'une télécommande
+          (pas de lecture locale).</p>
+        <div id="media-title" class="media-meta">Aucune vidéo</div>
+        <div class="grid-row">
+          <input type="text" id="video-url" style="width:100%; margin-bottom:10px; color:#ccc;">
+          <button onclick="sendVideoCmd('sendUrl', { url: document.getElementById('video-url').value })" class="btn"
+            id="send-url">▲ Envoyer</button>
+        </div>
+        <div class="grid-row">
+          <button onclick="sendVideoCmd('playpause')" class="btn" id="media-play-btn">▶️ Lecture</button>
+          <button onclick="sendVideoCmd('stop')" class="btn">⏹ Stop</button>
+        </div>
+        <div class="grid-row">
+          <button onclick="sendVideoCmd('delta', { seconds: -10.0 })" class="btn">⏪ -10s</button>
+          <button onclick="sendVideoCmd('delta', { seconds: 10.0 })" class="btn">⏩ +10s</button>
+        </div>
+        <input type="range" id="media-seek" class="range-input" min="0" max="1000" value="0"
+  onpointerdown="isUserSeeking = true;"
+  onpointerup="onSeekInput(this.value)"
+  onchange="onSeekInput(this.value)">
+        <div class="media-time">
+          <span id="media-current">0:00</span>
+          <span id="media-duration">0:00</span>
+        </div>
+        <div class="grid-row" style="margin-top:10px;">
+          <button onclick="sendVideoCmd('mute')" class="btn" id="media-mute-btn">🔇 Mute</button>
+        </div>
+        <label class="hint" for="media-volume">Volume réveil</label>
+        <input type="range" id="media-volume" class="range-input" min="0" max="100" value="100"
+          oninput="onVolumeInput(this.value)">
       </div>
+    </div>
 
-      <div class="grid-row">
-        <button onclick="sendBroadlinkCmd('tv_0')" class="btn" style="max-width: 33%;">0</button>
+    <!-- Catégorie 2: Commande BBOX -->
+    <div class="category-card" id="cat-bbox">
+      <div class="category-header" onclick="toggleCategory('cat-bbox')">
+        <div class="category-title">
+          <span>📺</span> Commande BBOX
+        </div>
+        <span class="chevron-icon">▼</span>
       </div>
+      <div class="category-body">
+        <!-- On / Veille -->
+        <div class="grid-row">
+          <button onclick="sendBboxCmd('power')" class="btn btn-power">🔴 On / Veille</button>
+        </div>
 
-      <!-- Options Input et Menu -->
-      <div class="grid-row" style="margin-top: 10px;">
-        <button onclick="sendBroadlinkCmd('tv_input')" class="btn" style="background-color: #d35400;">📥 Input</button>
-        <button onclick="sendBroadlinkCmd('tv_menu')" class="btn" style="background-color: #7f8c8d;">📋 Menu</button>
+        <!-- Pavé Directionnel -->
+        <div class="dpad-container">
+          <div></div>
+          <button onclick="sendBboxCmd('up')" class="btn">▲</button>
+          <div></div>
+          <button onclick="sendBboxCmd('left')" class="btn">◄</button>
+          <button onclick="sendBboxCmd('ok')" class="btn btn-ok">OK</button>
+          <button onclick="sendBboxCmd('right')" class="btn">►</button>
+          <div></div>
+          <button onclick="sendBboxCmd('down')" class="btn">▼</button>
+          <div></div>
+        </div>
+
+        <!-- Volume -->
+        <div class="grid-row">
+          <button onclick="sendBboxCmd('vol_down')" class="btn">🔈 Vol -</button>
+          <button onclick="sendBboxCmd('mute')" class="btn">🔇 Mute</button>
+          <button onclick="sendBboxCmd('vol_up')" class="btn">🔊 Vol +</button>
+        </div>
+
+        <!-- Chaînes Prédéfinies -->
+        <div class="grid-channels">
+          <button onclick="changeBboxChannel('1')" class="btn">TF1</button>
+          <button onclick="changeBboxChannel('2')" class="btn">France 2</button>
+          <button onclick="changeBboxChannel('3')" class="btn">France 3</button>
+          <button onclick="changeBboxChannel('5')" class="btn">Arte</button>
+          <button onclick="changeBboxChannel('6')" class="btn">M6</button>
+          <button onclick="changeBboxChannel('12')" class="btn">NRJ12</button>
+        </div>
+
+        <!-- Saisie Directe de Chaîne -->
+        <div class="custom-channel-row">
+          <input type="number" id="custom-channel" class="channel-input" value="1" min="1" max="999" inputmode="numeric"
+            pattern="[0-9]*" onkeydown="if(event.key === 'Enter') sendCustomChannel()">
+          <button onclick="sendCustomChannel()" class="btn btn-send">OK</button>
+        </div>
+
+        <!-- Bouton Redémarrer l'application -->
+        <button onclick="restartApp()" class="btn btn-restart-app">🔄 Redémarrer l'application</button>
       </div>
+    </div>
 
-      <!-- Pavé directionnel -->
-      <div class="dpad-container">
-        <div></div>
-        <button onclick="sendBroadlinkCmd('tv_up')" class="btn">▲</button>
-        <div></div>
-        <button onclick="sendBroadlinkCmd('tv_left')" class="btn">◄</button>
-        <button onclick="sendBroadlinkCmd('tv_ok')" class="btn btn-ok">OK</button>
-        <button onclick="sendBroadlinkCmd('tv_right')" class="btn">►</button>
-        <div></div>
-        <button onclick="sendBroadlinkCmd('tv_down')" class="btn">▼</button>
-        <div></div>
+    <!-- Catégorie 3: Télécommande TV Salon -->
+    <div class="category-card" id="cat-tv">
+      <div class="category-header" onclick="toggleCategory('cat-tv')">
+        <div class="category-title">
+          <span>🛋️</span> Télécommande TV Salon
+        </div>
+        <span class="chevron-icon">▼</span>
+      </div>
+      <div class="category-body">
+        <!-- Power & Input / Menu -->
+        <div class="grid-row">
+          <button onclick="sendTvCmd('tv_power')" class="btn btn-power">🔴 TV Power</button>
+          <button onclick="sendTvCmd('tv_input')" class="btn" style="background-color: #d35400;">🔌 Input</button>
+          <button onclick="sendTvCmd('tv_menu')" class="btn" style="background-color: #7f8c8d;">📋 Menu</button>
+          <button onclick="sendTvCmd('tv_return')" class="btn" style="background-color: #8c7f8d;">🔙 Retour</button>
+        </div>
+
+        <!-- Pavé directionnel TV -->
+        <div class="dpad-container">
+          <div></div>
+          <button onclick="sendTvCmd('tv_up')" class="btn">▲</button>
+          <div></div>
+          <button onclick="sendTvCmd('tv_left')" class="btn">◄</button>
+          <button onclick="sendTvCmd('tv_ok')" class="btn btn-ok">OK</button>
+          <button onclick="sendTvCmd('tv_right')" class="btn">►</button>
+          <div></div>
+          <button onclick="sendTvCmd('tv_down')" class="btn">▼</button>
+          <div></div>
+        </div>
+
+        <div class="grid-row">
+          <button onclick="sendTvCmd('tv_vol_down')" class="btn">🔈 Vol -</button>
+          <button onclick="sendTvCmd('tv_mute')" class="btn">🔇 Mute</button>
+          <button onclick="sendTvCmd('tv_vol_up')" class="btn">🔊 Vol +</button>
+        </div>
+
+        <!-- Pavé Numérique -->
+        <div class="grid-numpad">
+          <button onclick="sendTvCmd('tv_1')" class="btn">1</button>
+          <button onclick="sendTvCmd('tv_2')" class="btn">2</button>
+          <button onclick="sendTvCmd('tv_3')" class="btn">3</button>
+          <button onclick="sendTvCmd('tv_4')" class="btn">4</button>
+          <button onclick="sendTvCmd('tv_5')" class="btn">5</button>
+          <button onclick="sendTvCmd('tv_6')" class="btn">6</button>
+          <button onclick="sendTvCmd('tv_7')" class="btn">7</button>
+          <button onclick="sendTvCmd('tv_8')" class="btn">8</button>
+          <button onclick="sendTvCmd('tv_9')" class="btn">9</button>
+          <div></div>
+          <button onclick="sendTvCmd('tv_0')" class="btn">0</button>
+          <div></div>
+        </div>
       </div>
     </div>
 
   </div>
+
+  <!-- Toast Notification element -->
+  <div id="toast-notification" class="notification-toast"></div>
 
   <script>
     let peerTargetId = "reveil-ubuntu-bbox";
     let peer = null;
     let dataConn = null;
     let localStream = null;
+    let retryTimer = null;
+    let applyingRemoteState = false;
+    let lastVideoSrc = '';
+    let lastDuration = 0;
+    let knownVideos = [];
+    let isUserSeeking = false;
+let seekReleaseTimer = null;
 
-    function triggerHaptic() {
-      if (navigator.vibrate) navigator.vibrate(40);
+    // Toast de notification (Remplace alert)
+    function showToast(message, duration = 3000) {
+      const toast = document.getElementById('toast-notification');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
     }
 
+    // Gestion de l'ouverture/fermeture des accordéons
+    function toggleCategory(catId) {
+      triggerHaptic();
+      const card = document.getElementById(catId);
+      if (card) {
+        card.classList.toggle('open');
+      }
+    }
+
+    function scheduleRetry(delay = 5000) {
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = setTimeout(() => {
+        if (peer && !peer.destroyed && (!dataConn || !dataConn.open)) {
+          console.log("🔄 Tentative de reconnexion au réveil...");
+          connectDataChannel();
+        }
+      }, delay);
+    }
+
+    function triggerHaptic() {
+      if (navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }
+
+    // Modal des paramètres
     function toggleSettings() {
+      triggerHaptic();
       const modal = document.getElementById('settings-modal');
       modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
     }
@@ -469,12 +797,19 @@
     }
 
     function saveAndConnect() {
+      triggerHaptic();
       const inputVal = document.getElementById('peer-id-input').value.trim();
-      if (!inputVal) return;
+      if (!inputVal) {
+        showToast("Veuillez saisir un nom de channel valide.");
+        return;
+      }
+
       peerTargetId = inputVal;
       localStorage.setItem('bbox_peer_target_id', peerTargetId);
+
       if (dataConn) dataConn.close();
       if (peer) peer.destroy();
+
       initPeerJS();
     }
 
@@ -482,26 +817,82 @@
       updateStatus('orange', 'Initialisation...');
       peer = new Peer();
 
-      peer.on('open', () => {
+      peer.on('open', (id) => {
+        console.log("Mon ID Téléphone :", id);
         updateStatus('orange', 'Connexion...');
         connectDataChannel();
       });
 
-      peer.on('error', () => {
-        updateStatus('red', 'Erreur connexion');
+      peer.on('error', (err) => {
+        console.error("Erreur PeerJS :", err);
+
+        if (err.type === 'peer-unavailable') {
+          updateStatus('orange', 'Réveil indisponible, nouvelle tentative...');
+          scheduleRetry(5000);
+        } else if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(err.type)) {
+          updateStatus('red', 'Erreur réseau téléphone');
+          setTimeout(() => {
+            if (peer && !peer.destroyed) peer.reconnect();
+          }, 5000);
+        } else {
+          updateStatus('red', 'Erreur de connexion');
+        }
+      });
+
+      peer.on('disconnected', () => {
+        updateStatus('red', 'Déconnecté du serveur');
       });
     }
 
     function connectDataChannel() {
       if (!peer || peer.destroyed) return;
+
+      if (dataConn) {
+        dataConn.off('open');
+        dataConn.off('close');
+        dataConn.off('error');
+        try { dataConn.close(); } catch (e) { }
+      }
+
+      updateStatus('orange', 'Recherche du réveil...');
       dataConn = peer.connect(peerTargetId, { reliable: true });
 
       dataConn.on('open', () => {
+        console.log("✅ Connecté au réveil (Commandes actives)");
         updateStatus('green', 'Connecté');
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+          retryTimer = null;
+        }
+        dataConn.send({ type: 'video', action: 'list' });
+      });
+
+      dataConn.on('data', (data) => {
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'learn_status') {
+          showToast(`IR : ${data.message || data.status}`, 4000);
+        } else if (data.type === 'tv_status' && !data.ok) {
+          const msg = data.error === 'unknown_key'
+            ? `Pas de code pour ${data.key}. Capturez-le d'abord.`
+            : (data.error === 'rm4_offline' ? 'RM4 hors ligne' : 'Échec IR');
+          showToast(msg, 3500);
+        } else if (data.type === 'server_info') {
+          if (Array.isArray(data.videos)) renderVideoList(data.videos);
+          if (Array.isArray(data.codes)) renderLearnedKeys(data.codes);
+        } else if (data.type === 'video_state') {
+          applyVideoState(data);
+        }
       });
 
       dataConn.on('close', () => {
-        updateStatus('red', 'Déconnecté');
+        updateStatus('red', 'Déconnecté - Relance...');
+        scheduleRetry(4000);
+      });
+
+      dataConn.on('error', (err) => {
+        console.error("Erreur DataChannel :", err);
+        updateStatus('red', 'Échec de liaison');
+        scheduleRetry(5000);
       });
     }
 
@@ -510,68 +901,231 @@
       const callBtn = document.getElementById('call-btn');
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: true
+        });
         document.getElementById('local-video').srcObject = localStream;
 
+        updateStatus('orange', 'Appel en cours...');
+        callBtn.style.backgroundColor = "#e67e22";
+        callBtn.textContent = "🔄 Connexion visio...";
+
         const mediaCall = peer.call(peerTargetId, localStream);
+
         mediaCall.on('stream', (remoteStream) => {
+          console.log("Flux vidéo distant reçu !");
           document.getElementById('remote-video').srcObject = remoteStream;
+          updateStatus('green', 'Visio en cours');
           callBtn.style.backgroundColor = "#c0392b";
           callBtn.textContent = "🛑 Raccrocher";
           callBtn.onclick = () => location.reload();
         });
+
+        mediaCall.on('close', () => {
+          updateStatus('orange', 'Visio terminée');
+        });
+
       } catch (err) {
-        alert("Impossible d'accéder à la caméra/micro.");
+        console.error("Erreur d'accès à la caméra/micro :", err);
+        showToast("Impossible d'accéder à la caméra ou au micro.");
       }
     }
 
     function sendBboxCmd(cmd) {
       triggerHaptic();
-      fetch(`http://${location.hostname}:3000/?cmd=${cmd}`).catch(() => {
-        if (dataConn && dataConn.open) dataConn.send({ type: 'cmd', value: cmd });
-      });
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'cmd', value: cmd });
+        console.log("Commande Bbox envoyée :", cmd);
+        showToast(`Commande Bbox: ${cmd}`);
+      } else {
+        showToast("Télécommande non connectée.");
+      }
     }
 
-    function sendBroadlinkCmd(btnName) {
+    function sendTvCmd(cmd) {
       triggerHaptic();
-      fetch(`http://${location.hostname}:3000/?broadlink_cmd=${btnName}`)
-        .then(res => res.text())
-        .then(res => {
-          if (res !== "OK") alert(`Impossible d'envoyer le code IR pour "${btnName}"`);
-        });
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'tv_cmd', value: cmd });
+        console.log("Commande TV Salon envoyée :", cmd);
+        showToast(`Commande TV: ${cmd}`);
+      } else {
+        showToast("Télécommande non connectée.");
+      }
     }
 
-    function startBroadlinkLearn() {
-      const selectedBtn = document.getElementById('learn-btn-select').value;
-      alert(`Pointe la télécommande vers le RM4 Pro et appuie sur la touche "${selectedBtn}".`);
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.floor(seconds || 0));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return `${m}:${String(r).padStart(2, '0')}`;
+    }
 
-      fetch(`http://${location.hostname}:3000/?broadlink_learn=${selectedBtn}`)
-        .then(res => res.text())
-        .then(res => {
-          if (res === "OK") alert(` Signal IR enregistré pour "${selectedBtn}" !`);
-          else alert("Erreur lors de l'apprentissage IR.");
-        });
+    function renderLearnedKeys(codes) {
+      const el = document.getElementById('learned-keys');
+      if (!el) return;
+      el.textContent = codes.length ? `Codes enregistrés : ${codes.join(', ')}` : 'Aucun code IR enregistré pour l’instant.';
+    }
+
+    function renderVideoList(videos) {
+      knownVideos = videos || [];
+      const list = document.getElementById('video-file-list');
+      if (!list) return;
+      if (!knownVideos.length) {
+        list.innerHTML = '<p class="hint">Dossier videos/ vide. Envoyez un fichier ci-dessous.</p>';
+        return;
+      }
+      list.innerHTML = knownVideos.map((v) => {
+        const active = v.src === lastVideoSrc ? ' active' : '';
+        return `<button class="btn video-file-btn${active}" onclick="playRemoteVideo('${v.src.replace(/'/g, "\\'")}', '${String(v.name).replace(/'/g, "\\'")}')">${v.name}</button>`;
+      }).join('');
+    }
+
+    function applyVideoState(state) {
+  applyingRemoteState = true;
+  lastVideoSrc = state.src || '';
+
+  if (state.duration && state.duration > 0) {
+    lastDuration = state.duration;
+  }
+
+  const titleEl = document.getElementById('media-title');
+  const playBtn = document.getElementById('media-play-btn');
+  const muteBtn = document.getElementById('media-mute-btn');
+  const seek = document.getElementById('media-seek');
+  const vol = document.getElementById('media-volume');
+
+  if (titleEl) titleEl.textContent = state.title || (state.visible ? 'Lecture sur le réveil' : 'Aucune vidéo');
+  if (playBtn) playBtn.textContent = state.playing ? '⏸ Pause' : '▶️ Lecture';
+  if (muteBtn) muteBtn.textContent = state.muted ? '🔊 Son' : '🔇 Mute';
+
+  // Calcul et affichage de la position
+  if (lastDuration > 0) {
+    const totalCurrentTime = (state.startTime || 0) + (state.currentTime || 0);
+    
+    // On met à jour la barre seulement si l'utilisateur ne la manipule pas
+    if (seek && !isUserSeeking) {
+      seek.value = Math.round((totalCurrentTime / lastDuration) * 1000);
+    }
+    
+    document.getElementById('media-current').textContent = formatTime(totalCurrentTime);
+    document.getElementById('media-duration').textContent = formatTime(lastDuration);
+  } else {
+    if (seek && !isUserSeeking) seek.value = 0;
+    document.getElementById('media-current').textContent = '0:00';
+    document.getElementById('media-duration').textContent = '0:00';
+  }
+
+  if (vol && typeof state.volume === 'number') vol.value = Math.round(state.volume * 100);
+  renderVideoList(knownVideos);
+  applyingRemoteState = false;
+}
+
+    function sendVideoCmd(action, extra = {}) {
+  triggerHaptic();
+  if (!dataConn || !dataConn.open) {
+    showToast("Télécommande non connectée.");
+    return;
+  }
+
+  // Débloque systématiquement le curseur si une nouvelle commande est lancée (stop, nouvelle URL, play/pause)
+  if (action !== 'seek') {
+    isUserSeeking = false;
+    if (seekReleaseTimer) clearTimeout(seekReleaseTimer);
+  }
+
+  dataConn.send(Object.assign({ type: 'video', action }, extra));
+}
+
+function onSeekInput(value) {
+  if (seekReleaseTimer) clearTimeout(seekReleaseTimer);
+
+  if (lastDuration <= 0) {
+    isUserSeeking = false;
+    return;
+  }
+
+  const targetTime = (Number(value) / 1000) * lastDuration;
+  
+  // Envoi de la commande de saut au réveil
+  if (dataConn && dataConn.open) {
+    dataConn.send({ type: 'video', action: 'seek', time: targetTime });
+  }
+
+  // Relâche le verrou après 800ms pour réautoriser le rafraîchissement automatique
+  seekReleaseTimer = setTimeout(() => {
+    isUserSeeking = false;
+  }, 800);
+}
+
+    function playRemoteVideo(src, title) {
+      lastVideoSrc = src;
+      sendVideoCmd('play', { src, title });
+      showToast("Lecture envoyée au réveil");
+    }
+
+    function onSeekInput(value) {
+      if (applyingRemoteState || lastDuration <= 0) return;
+      sendVideoCmd('seek', { time: (Number(value) / 1000) * lastDuration });
+    }
+
+    function onVolumeInput(value) {
+      if (applyingRemoteState) return;
+      sendVideoCmd('volume', { volume: Number(value) / 100 });
+    }
+
+    function startKeyLearning() {
+      triggerHaptic();
+      const select = document.getElementById('learn-key-select');
+      const keyName = select.value;
+
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'learn_key', key: keyName });
+        showToast(`Pointez la télécommande vers le RM4 : ${keyName}`, 5000);
+      } else {
+        showToast("Télécommande non connectée.");
+      }
     }
 
     function sendPairing() {
       triggerHaptic();
-      const textVal = document.getElementById('pairing-input').value.trim();
-      fetch(`http://${location.hostname}:3000/?cmd=send_pairing&payload=${textVal}`);
+      const input = document.getElementById('pairing-input');
+      const textVal = input.value.trim();
+
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'cmd', value: 'send_pairing', payload: textVal });
+        console.log("Pairing envoyé avec le texte :", textVal);
+        showToast("Pairing envoyé");
+        input.value = '';
+        toggleSettings();
+      } else {
+        showToast("Télécommande non connectée.");
+      }
     }
 
     function changeBboxChannel(channel) {
       triggerHaptic();
-      fetch(`http://${location.hostname}:3000/?channel=${channel}`);
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'channel', value: channel.toString() });
+        console.log("Chaîne envoyée :", channel);
+        showToast(`Chaîne Bbox : ${channel}`);
+      } else {
+        showToast("Télécommande non connectée.");
+      }
     }
 
     function sendCustomChannel() {
       const input = document.getElementById('custom-channel');
-      if (input.value.trim() !== "") changeBboxChannel(input.value.trim());
+      const val = input.value.trim();
+      if (val !== "") {
+        changeBboxChannel(val);
+        input.blur();
+      }
     }
 
     function restartApp() {
       triggerHaptic();
-      if (confirm("Redémarrer l'application ?")) sendBboxCmd('restart_app');
+      sendBboxCmd('restart_app');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -579,8 +1133,11 @@
       if (savedId) {
         peerTargetId = savedId;
         document.getElementById('peer-id-input').value = savedId;
+        initPeerJS();
+      } else {
+        updateStatus('red', 'Saisissez un ID');
+        initPeerJS();
       }
-      initPeerJS();
     });
   </script>
 </body>
