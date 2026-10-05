@@ -4,9 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Télécommande & Visio Bbox</title>
+  <title>Télécommande Bruno</title>
 
-  <!-- Bibliothèque PeerJS -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
@@ -28,7 +27,6 @@
       -webkit-user-select: none;
     }
 
-    /* En-tête fixe en haut à gauche */
     .top-status-header {
       position: fixed;
       top: 12px;
@@ -44,7 +42,6 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
     }
 
-    /* Bouton Paramètres (Roue crantée) en haut à droite */
     .settings-btn {
       position: fixed;
       top: 12px;
@@ -70,7 +67,6 @@
       transform: scale(0.9);
     }
 
-    /* Fenêtre modale des paramètres */
     .settings-modal {
       display: none;
       position: fixed;
@@ -90,10 +86,12 @@
       padding: 20px;
       border-radius: 16px;
       width: 90%;
-      max-width: 350px;
+      max-width: 380px;
       display: flex;
       flex-direction: column;
       gap: 15px;
+      max-height: 85vh;
+      overflow-y: auto;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
 
@@ -102,7 +100,6 @@
       margin-top: 10px;
     }
 
-    /* Voyant LED */
     .led-indicator {
       width: 12px;
       height: 12px;
@@ -113,20 +110,9 @@
       transition: background-color 0.3s, box-shadow 0.3s;
     }
 
-    .led-red {
-      background-color: #e74c3c;
-      box-shadow: 0 0 8px rgba(231, 76, 60, 0.8);
-    }
-
-    .led-orange {
-      background-color: #f39c12;
-      box-shadow: 0 0 8px rgba(243, 156, 18, 0.8);
-    }
-
-    .led-green {
-      background-color: #2ecc71;
-      box-shadow: 0 0 8px rgba(46, 204, 113, 0.8);
-    }
+    .led-red { background-color: #e74c3c; box-shadow: 0 0 8px rgba(231, 76, 60, 0.8); }
+    .led-orange { background-color: #f39c12; box-shadow: 0 0 8px rgba(243, 156, 18, 0.8); }
+    .led-green { background-color: #2ecc71; box-shadow: 0 0 8px rgba(46, 204, 113, 0.8); }
 
     .status-text {
       font-size: 0.85em;
@@ -137,6 +123,26 @@
     .container {
       width: 100%;
       max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-card {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 16px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .section-title {
+      margin-top: 0;
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 1.15em;
+      color: #3498db;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
     }
 
     .peer-config-row {
@@ -156,19 +162,14 @@
       outline: none;
     }
 
-    .peer-input:focus {
-      border-color: #3498db;
-    }
-
     .video-container {
       position: relative;
       width: 100%;
-      height: 220px;
+      height: 200px;
       background-color: #000;
       border-radius: 16px;
       overflow: hidden;
       margin-bottom: 15px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     }
 
     #remote-video {
@@ -192,11 +193,11 @@
       background-color: rgba(255, 255, 255, 0.15);
       color: #fff;
       border: none;
-      padding: 14px;
+      padding: 12px;
       border-radius: 10px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 1em;
+      font-size: 0.95em;
       transition: background 0.1s, transform 0.1s;
       touch-action: manipulation;
       display: flex;
@@ -209,37 +210,10 @@
       transform: scale(0.96);
     }
 
-    .btn-connect {
-      background-color: #3498db;
-      padding: 0 15px;
-      font-size: 0.9em;
-    }
-
-    .btn-call {
-      width: 100%;
-      background-color: #27ae60;
-      padding: 14px;
-      font-size: 1.1em;
-      margin-bottom: 15px;
-    }
-
-    .btn-power {
-      background-color: #e74c3c;
-      width: 100%;
-    }
-
-    .btn-restart-app {
-      background-color: #e74c3c;
-      width: 100%;
-      margin-top: 16px;
-    }
-
-    .bbox-container {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 16px;
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-    }
+    .btn-connect { background-color: #3498db; padding: 0 15px; }
+    .btn-call { width: 100%; background-color: #27ae60; padding: 14px; font-size: 1.05em; }
+    .btn-power { background-color: #e74c3c; width: 100%; }
+    .btn-restart-app { background-color: #e74c3c; width: 100%; margin-top: 16px; }
 
     .grid-row {
       display: flex;
@@ -248,9 +222,7 @@
       margin-bottom: 12px;
     }
 
-    .grid-row .btn {
-      flex: 1;
-    }
+    .grid-row .btn { flex: 1; }
 
     .dpad-container {
       display: grid;
@@ -260,10 +232,7 @@
       margin: 15px auto;
     }
 
-    .btn-ok {
-      background-color: #2980b9;
-      font-weight: bold;
-    }
+    .btn-ok { background-color: #2980b9; font-weight: bold; }
 
     .grid-channels {
       display: grid;
@@ -284,82 +253,105 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 10px;
       color: #fff;
-      font-size: 1.2em;
+      font-size: 1.1em;
       text-align: center;
       font-weight: bold;
       outline: none;
+      padding: 8px;
+    }
+
+    .learn-select {
+      width: 100%;
       padding: 10px;
-    }
-
-    .channel-input:focus {
-      border-color: #3498db;
-    }
-
-    .btn-send {
-      background-color: #3498db;
-      padding: 0 20px;
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Statut et Voyant LED ancrés tout en haut à gauche -->
   <div class="top-status-header">
-    <div id="status-led" class="led-indicator led-red" title="État de la connexion"></div>
+    <div id="status-led" class="led-indicator led-red"></div>
     <span id="peer-status" class="status-text">Déconnecté</span>
   </div>
 
-  <!-- Bouton Paramètres ancré en haut à droite -->
   <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
 
-  <!-- Modale des paramètres -->
+  <!-- Modale des parametres -->
   <div id="settings-modal" class="settings-modal">
     <div class="settings-content">
       <h3 style="margin-top: 0; text-align: center;">Paramètres</h3>
 
-      <!-- Bouton Reset Cert -->
-      <button onclick="sendBboxCmd('reset_cert')" class="btn" style="background-color: #d35400;">🔄 Reset Cert</button>
+      <button onclick="sendBboxCmd('reset_cert')" class="btn" style="background-color: #d35400;">🔄 Reset Cert Bbox</button>
 
-      <!-- Champ texte et Bouton Pairing -->
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="text" id="pairing-input" class="peer-input" placeholder="Texte de pairing">
+      <div style="display: flex; gap: 10px;">
+        <input type="text" id="pairing-input" class="peer-input" placeholder="Code Pairing Bbox">
         <button onclick="sendPairing()" class="btn btn-connect">Pairing</button>
       </div>
 
-      <!-- Bouton Fermer -->
+      <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;">
+
+      <h4 style="margin: 0; text-align: center;">🎓 Apprentissage IR TV Salon</h4>
+      <p style="font-size: 0.8em; color: #aaa; text-align: center; margin: 0;">Sélectionnez une touche à enregistrer.</p>
+
+      <select id="learn-btn-select" class="learn-select">
+        <option value="tv_power">Bouton Power TV</option>
+        <option value="tv_1">Bouton 1</option>
+        <option value="tv_2">Bouton 2</option>
+        <option value="tv_3">Bouton 3</option>
+        <option value="tv_4">Bouton 4</option>
+        <option value="tv_5">Bouton 5</option>
+        <option value="tv_6">Bouton 6</option>
+        <option value="tv_7">Bouton 7</option>
+        <option value="tv_8">Bouton 8</option>
+        <option value="tv_9">Bouton 9</option>
+        <option value="tv_0">Bouton 0</option>
+        <option value="tv_up">Flèche Haut</option>
+        <option value="tv_down">Flèche Bas</option>
+        <option value="tv_left">Flèche Gauche</option>
+        <option value="tv_right">Flèche Droite</option>
+        <option value="tv_ok">Bouton OK</option>
+        <option value="tv_input">Bouton Input / Source</option>
+        <option value="tv_menu">Bouton Menu</option>
+      </select>
+
+      <button onclick="startBroadlinkLearn()" class="btn" style="background-color: #8e44ad;">📡 Apprendre la touche</button>
+
       <button onclick="toggleSettings()" class="btn close-settings">Fermer</button>
     </div>
   </div>
 
   <div class="container">
 
-    <!-- Configuration ID PeerJS distant -->
-    <div class="peer-config-row">
-      <input type="text" id="peer-id-input" class="peer-input" placeholder="ID Cible (ex: reveil-ubuntu-bbox)"
-        value="reveil-ubuntu-bbox">
-      <button onclick="saveAndConnect()" class="btn btn-connect">Connexion</button>
+    <!-- CATÉGORIE 1 : VISIO -->
+    <div class="section-card">
+      <h3 class="section-title">📹 Visio</h3>
+
+      <div class="peer-config-row">
+        <input type="text" id="peer-id-input" class="peer-input" placeholder="ID Cible" value="reveil-ubuntu-bbox">
+        <button onclick="saveAndConnect()" class="btn btn-connect">Connexion</button>
+      </div>
+
+      <div class="video-container">
+        <video id="remote-video" autoplay playsinline></video>
+        <video id="local-video" autoplay playsinline muted></video>
+      </div>
+
+      <button id="call-btn" onclick="startCall()" class="btn btn-call">📞 Lancer la Visio</button>
     </div>
 
-    <!-- Zone Visioconférence -->
-    <div class="video-container">
-      <video id="remote-video" autoplay playsinline></video>
-      <video id="local-video" autoplay playsinline muted></video>
-    </div>
+    <!-- CATÉGORIE 2 : TÉLÉCOMMANDE BBOX -->
+    <div class="section-card">
+      <h3 class="section-title">📺 Télécommande Bbox</h3>
 
-    <!-- Bouton d'appel -->
-    <button id="call-btn" onclick="startCall()" class="btn btn-call">📞 Lancer la Visio</button>
-
-    <!-- Panneau Télécommande Bbox -->
-    <div class="bbox-container">
-      <h3 style="margin-top: 0; text-align: center; margin-bottom: 15px;">Télécommande Bbox</h3>
-
-      <!-- On / Veille -->
       <div class="grid-row">
         <button onclick="sendBboxCmd('power')" class="btn btn-power">🔴 On / Veille</button>
       </div>
 
-      <!-- Pavé Directionnel -->
       <div class="dpad-container">
         <div></div>
         <button onclick="sendBboxCmd('up')" class="btn">▲</button>
@@ -372,14 +364,12 @@
         <div></div>
       </div>
 
-      <!-- Volume -->
       <div class="grid-row">
         <button onclick="sendBboxCmd('vol_down')" class="btn">🔈 Vol -</button>
         <button onclick="sendBboxCmd('mute')" class="btn">🔇 Mute</button>
         <button onclick="sendBboxCmd('vol_up')" class="btn">🔊 Vol +</button>
       </div>
 
-      <!-- Chaînes Prédéfinies -->
       <div class="grid-channels">
         <button onclick="changeBboxChannel('1')" class="btn">TF1</button>
         <button onclick="changeBboxChannel('2')" class="btn">France 2</button>
@@ -389,16 +379,57 @@
         <button onclick="changeBboxChannel('12')" class="btn">NRJ12</button>
       </div>
 
-      <!-- Saisie Directe de Chaîne -->
       <div class="custom-channel-row">
-        <input type="number" id="custom-channel" class="channel-input" value="1" min="1" max="999" inputmode="numeric"
-          pattern="[0-9]*" onkeydown="if(event.key === 'Enter') sendCustomChannel()">
-        <button onclick="sendCustomChannel()" class="btn btn-send">OK</button>
+        <input type="number" id="custom-channel" class="channel-input" value="1" min="1" max="999" inputmode="numeric">
+        <button onclick="sendCustomChannel()" class="btn btn-connect">OK</button>
       </div>
 
-      <!-- Bouton Redémarrer l'application -->
       <button onclick="restartApp()" class="btn btn-restart-app">🔄 Redémarrer l'application</button>
+    </div>
 
+    <!-- CATÉGORIE 3 : TÉLÉCOMMANDE TV SALON -->
+    <div class="section-card">
+      <h3 class="section-title">📺 Télécommande TV Salon</h3>
+
+      <div class="grid-row">
+        <button onclick="sendBroadlinkCmd('tv_power')" class="btn btn-power">🔴 Power TV</button>
+      </div>
+
+      <!-- Pavé numérique 1-9 -->
+      <div class="grid-channels">
+        <button onclick="sendBroadlinkCmd('tv_1')" class="btn">1</button>
+        <button onclick="sendBroadlinkCmd('tv_2')" class="btn">2</button>
+        <button onclick="sendBroadlinkCmd('tv_3')" class="btn">3</button>
+        <button onclick="sendBroadlinkCmd('tv_4')" class="btn">4</button>
+        <button onclick="sendBroadlinkCmd('tv_5')" class="btn">5</button>
+        <button onclick="sendBroadlinkCmd('tv_6')" class="btn">6</button>
+        <button onclick="sendBroadlinkCmd('tv_7')" class="btn">7</button>
+        <button onclick="sendBroadlinkCmd('tv_8')" class="btn">8</button>
+        <button onclick="sendBroadlinkCmd('tv_9')" class="btn">9</button>
+      </div>
+
+      <div class="grid-row">
+        <button onclick="sendBroadlinkCmd('tv_0')" class="btn" style="max-width: 33%;">0</button>
+      </div>
+
+      <!-- Options Input et Menu -->
+      <div class="grid-row" style="margin-top: 10px;">
+        <button onclick="sendBroadlinkCmd('tv_input')" class="btn" style="background-color: #d35400;">📥 Input</button>
+        <button onclick="sendBroadlinkCmd('tv_menu')" class="btn" style="background-color: #7f8c8d;">📋 Menu</button>
+      </div>
+
+      <!-- Pavé directionnel -->
+      <div class="dpad-container">
+        <div></div>
+        <button onclick="sendBroadlinkCmd('tv_up')" class="btn">▲</button>
+        <div></div>
+        <button onclick="sendBroadlinkCmd('tv_left')" class="btn">◄</button>
+        <button onclick="sendBroadlinkCmd('tv_ok')" class="btn btn-ok">OK</button>
+        <button onclick="sendBroadlinkCmd('tv_right')" class="btn">►</button>
+        <div></div>
+        <button onclick="sendBroadlinkCmd('tv_down')" class="btn">▼</button>
+        <div></div>
+      </div>
     </div>
 
   </div>
@@ -408,25 +439,11 @@
     let peer = null;
     let dataConn = null;
     let localStream = null;
-    let retryTimer = null; // Gestionnaire de relance automatique
-
-    function scheduleRetry(delay = 5000) {
-      if (retryTimer) clearTimeout(retryTimer);
-      retryTimer = setTimeout(() => {
-        if (peer && !peer.destroyed && (!dataConn || !dataConn.open)) {
-          console.log("🔄 Tentative de reconnexion au réveil...");
-          connectDataChannel();
-        }
-      }, delay);
-    }
 
     function triggerHaptic() {
-      if (navigator.vibrate) {
-        navigator.vibrate(40);
-      }
+      if (navigator.vibrate) navigator.vibrate(40);
     }
 
-    // Gestion de l'affichage de la fenêtre modale des paramètres
     function toggleSettings() {
       const modal = document.getElementById('settings-modal');
       modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
@@ -436,7 +453,7 @@
       const statusEl = document.getElementById('peer-status');
       const ledEl = document.getElementById('status-led');
 
-      ledEl.className = 'led-indicator'; // Reset classes
+      ledEl.className = 'led-indicator';
       statusEl.textContent = message;
 
       if (state === 'green') {
@@ -453,17 +470,11 @@
 
     function saveAndConnect() {
       const inputVal = document.getElementById('peer-id-input').value.trim();
-      if (!inputVal) {
-        alert("Veuillez saisir un nom de channel valide.");
-        return;
-      }
-
+      if (!inputVal) return;
       peerTargetId = inputVal;
       localStorage.setItem('bbox_peer_target_id', peerTargetId);
-
       if (dataConn) dataConn.close();
       if (peer) peer.destroy();
-
       initPeerJS();
     }
 
@@ -471,64 +482,26 @@
       updateStatus('orange', 'Initialisation...');
       peer = new Peer();
 
-      peer.on('open', (id) => {
-        console.log("Mon ID Téléphone :", id);
+      peer.on('open', () => {
         updateStatus('orange', 'Connexion...');
         connectDataChannel();
       });
 
-      peer.on('error', (err) => {
-        console.error("Erreur PeerJS :", err);
-
-        if (err.type === 'peer-unavailable') {
-          updateStatus('orange', 'Réveil indisponible, nouvelle tentative...');
-          scheduleRetry(5000);
-        } else if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(err.type)) {
-          updateStatus('red', 'Erreur réseau téléphone');
-          setTimeout(() => {
-            if (peer && !peer.destroyed) peer.reconnect();
-          }, 5000);
-        } else {
-          updateStatus('red', 'Erreur de connexion');
-        }
-      });
-
-      peer.on('disconnected', () => {
-        updateStatus('red', 'Déconnecté du serveur');
+      peer.on('error', () => {
+        updateStatus('red', 'Erreur connexion');
       });
     }
 
     function connectDataChannel() {
       if (!peer || peer.destroyed) return;
-
-      if (dataConn) {
-        dataConn.off('open');
-        dataConn.off('close');
-        dataConn.off('error');
-        try { dataConn.close(); } catch (e) { }
-      }
-
-      updateStatus('orange', 'Recherche du réveil...');
       dataConn = peer.connect(peerTargetId, { reliable: true });
 
       dataConn.on('open', () => {
-        console.log("✅ Connecté au réveil (Commandes Bbox actives)");
         updateStatus('green', 'Connecté');
-        if (retryTimer) {
-          clearTimeout(retryTimer);
-          retryTimer = null;
-        }
       });
 
       dataConn.on('close', () => {
-        updateStatus('red', 'Déconnecté - Nouvelle tentative...');
-        scheduleRetry(4000);
-      });
-
-      dataConn.on('error', (err) => {
-        console.error("Erreur DataChannel :", err);
-        updateStatus('red', 'Échec de liaison');
-        scheduleRetry(5000);
+        updateStatus('red', 'Déconnecté');
       });
     }
 
@@ -537,87 +510,68 @@
       const callBtn = document.getElementById('call-btn');
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-          audio: true
-        });
+        localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true });
         document.getElementById('local-video').srcObject = localStream;
 
-        updateStatus('orange', 'Appel en cours...');
-        callBtn.style.backgroundColor = "#e67e22";
-        callBtn.textContent = "🔄 Connexion visio...";
-
         const mediaCall = peer.call(peerTargetId, localStream);
-
         mediaCall.on('stream', (remoteStream) => {
-          console.log("Flux vidéo distant reçu !");
           document.getElementById('remote-video').srcObject = remoteStream;
-          updateStatus('green', 'Visio en cours');
           callBtn.style.backgroundColor = "#c0392b";
           callBtn.textContent = "🛑 Raccrocher";
           callBtn.onclick = () => location.reload();
         });
-
-        mediaCall.on('close', () => {
-          updateStatus('orange', 'Visio terminée');
-        });
-
       } catch (err) {
-        console.error("Erreur d'accès à la caméra/micro :", err);
-        alert("Impossible d'accéder à la caméra ou au micro.");
+        alert("Impossible d'accéder à la caméra/micro.");
       }
     }
 
     function sendBboxCmd(cmd) {
       triggerHaptic();
-      if (dataConn && dataConn.open) {
-        dataConn.send({ type: 'cmd', value: cmd });
-        console.log("Commande envoyée :", cmd);
-      } else {
-        alert("La télécommande n'est pas encore connectée.");
-      }
+      fetch(`http://${location.hostname}:3000/?cmd=${cmd}`).catch(() => {
+        if (dataConn && dataConn.open) dataConn.send({ type: 'cmd', value: cmd });
+      });
     }
 
-    // Fonction dédiée pour envoyer le pairing
+    function sendBroadlinkCmd(btnName) {
+      triggerHaptic();
+      fetch(`http://${location.hostname}:3000/?broadlink_cmd=${btnName}`)
+        .then(res => res.text())
+        .then(res => {
+          if (res !== "OK") alert(`Impossible d'envoyer le code IR pour "${btnName}"`);
+        });
+    }
+
+    function startBroadlinkLearn() {
+      const selectedBtn = document.getElementById('learn-btn-select').value;
+      alert(`Pointe la télécommande vers le RM4 Pro et appuie sur la touche "${selectedBtn}".`);
+
+      fetch(`http://${location.hostname}:3000/?broadlink_learn=${selectedBtn}`)
+        .then(res => res.text())
+        .then(res => {
+          if (res === "OK") alert(` Signal IR enregistré pour "${selectedBtn}" !`);
+          else alert("Erreur lors de l'apprentissage IR.");
+        });
+    }
+
     function sendPairing() {
       triggerHaptic();
-      const input = document.getElementById('pairing-input');
-      const textVal = input.value.trim();
-
-      if (dataConn && dataConn.open) {
-        dataConn.send({ type: 'cmd', value: 'send_pairing', payload: textVal });
-        console.log("Pairing envoyé avec le texte :", textVal);
-        input.value = ''; // Réinitialiser le champ
-        toggleSettings(); // Fermer la modale (optionnel)
-      } else {
-        alert("La télécommande n'est pas encore connectée.");
-      }
+      const textVal = document.getElementById('pairing-input').value.trim();
+      fetch(`http://${location.hostname}:3000/?cmd=send_pairing&payload=${textVal}`);
     }
 
     function changeBboxChannel(channel) {
       triggerHaptic();
-      if (dataConn && dataConn.open) {
-        dataConn.send({ type: 'channel', value: channel.toString() });
-        console.log("Chaîne envoyée :", channel);
-      } else {
-        alert("La télécommande n'est pas encore connectée.");
-      }
+      fetch(`http://${location.hostname}:3000/?channel=${channel}`);
     }
 
     function sendCustomChannel() {
       const input = document.getElementById('custom-channel');
-      const val = input.value.trim();
-      if (val !== "") {
-        changeBboxChannel(val);
-        input.blur();
-      }
+      if (input.value.trim() !== "") changeBboxChannel(input.value.trim());
     }
 
     function restartApp() {
       triggerHaptic();
-      if (confirm("Voulez-vous vraiment redémarrer l'application ?")) {
-        sendBboxCmd('restart_app');
-      }
+      if (confirm("Redémarrer l'application ?")) sendBboxCmd('restart_app');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -625,10 +579,8 @@
       if (savedId) {
         peerTargetId = savedId;
         document.getElementById('peer-id-input').value = savedId;
-        initPeerJS();
-      } else {
-        updateStatus('red', 'Saisissez un ID');
       }
+      initPeerJS();
     });
   </script>
 </body>
