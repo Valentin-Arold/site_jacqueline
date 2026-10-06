@@ -722,6 +722,14 @@
       </div>
 
       <div class="settings-section">
+        <h4 class="settings-section-title">�️ Google API Key</h4>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="google-api-input" class="peer-input" placeholder="API Key" value="">
+          <button onclick="saveGoogleApiKey()" class="btn btn-accent">OK</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h4 class="settings-section-title">📡 Capture IR via RM4</h4>
         <p class="hint">Le RM4 enregistre le signal IR de votre télécommande physique.</p>
         <select id="learn-key-select" class="select-input" style="margin-bottom: 10px;">
@@ -1078,6 +1086,7 @@
 
   <script>
     let peerTargetId = "reveil-ubuntu-bbox";
+    let apiKeyId = "your_api_key_here";
     let peer = null;
     let dataConn = null;
     let localStream = null;
@@ -1173,6 +1182,19 @@
 
       initPeerJS();
       toggleSettings();
+    }
+
+    function saveGoogleApiKey() {
+      triggerHaptic();
+      const apiInput = document.getElementById('google-api-input').value.trim();
+      if (!apiInput) {
+        showToast("Veuillez saisir une clé API Google valide.");
+        return;
+      }
+
+      apiKeyId = apiInput;
+      localStorage.setItem('bbox_google_api_key', apiKeyId);
+      showToast("Clé API Google enregistrée ✅");
     }
 
     function initPeerJS() {
@@ -1390,7 +1412,7 @@
       }
     }
 
-async function searchYouTube() {
+    async function searchYouTube() {
   const queryInput = document.getElementById('yt-search-input');
   const query = queryInput ? queryInput.value.trim() : '';
 
@@ -1406,75 +1428,38 @@ async function searchYouTube() {
   if (resultsContainer) resultsContainer.innerHTML = '';
   if (loader) loader.style.display = 'flex';
 
-  // Variantes de recherche (avec et sans accents)
-  const cleanQuery = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const searchQueries = Array.from(new Set([query, cleanQuery]));
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKeyId}`;
+    const response = await fetch(url);
 
-  // Endpoints API publics autorisant le CORS et le fetch direct
-  const endpoints = [
-    { url: (q) => `https://vid.puffyan.us/api/v1/search?q=${q}&type=video`, type: 'invidious' },
-    { url: (q) => `https://inv.tux.pizza/api/v1/search?q=${q}&type=video`, type: 'invidious' },
-    { url: (q) => `https://api.piped.private.coffee/search?q=${q}&filter=videos`, type: 'piped' },
-    { url: (q) => `https://pipedapi.drgns.space/search?q=${q}&filter=videos`, type: 'piped' }
-  ];
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP : ${response.status}`);
+    }
 
-  let videos = [];
+    const data = await response.json();
+    const videos = (data.items || []).map(item => ({
+      id: item.id.videoId,
+      title: item.snippet.title,
+      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+      duration: ''
+    }));
 
-  for (const qStr of searchQueries) {
-    const encodedQ = encodeURIComponent(qStr);
+    if (loader) loader.style.display = 'none';
 
-    for (const ep of endpoints) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 secondes de délai
-
-        const response = await fetch(ep.url(encodedQ), { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) continue;
-        const data = await response.json();
-
-        if (ep.type === 'invidious' && Array.isArray(data)) {
-          videos = data.filter(item => item.videoId && item.title).map(item => ({
-            id: item.videoId,
-            title: item.title,
-            thumbnail: item.videoThumbnails && item.videoThumbnails.length > 0
-              ? item.videoThumbnails[0].url
-              : `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
-            duration: formatDurationSeconds(item.lengthSeconds)
-          }));
-        } else if (ep.type === 'piped' && data.items && Array.isArray(data.items)) {
-          videos = data.items.filter(item => item.type === 'stream' || item.url).map(item => {
-            const vId = item.url ? item.url.replace('/watch?v=', '') : '';
-            return {
-              id: vId,
-              title: item.title,
-              thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
-              duration: formatDurationSeconds(item.duration)
-            };
-          });
-        }
-
-        if (videos.length > 0) break; // Recherche réussie
-      } catch (err) {
-        console.warn("Échec d'un endpoint YouTube :", err);
+    if (videos.length === 0) {
+      if (resultsContainer) {
+        resultsContainer.innerHTML = '<div style="text-align:center; color: var(--text-sub); padding:16px;">Aucun résultat trouvé.</div>';
       }
+      return;
     }
 
-    if (videos.length > 0) break;
+    renderYouTubeResults(videos);
+
+  } catch (err) {
+    console.error("Erreur de recherche YouTube :", err);
+    if (loader) loader.style.display = 'none';
+    showToast("Erreur lors de la recherche YouTube");
   }
-
-  if (loader) loader.style.display = 'none';
-
-  if (videos.length === 0) {
-    if (resultsContainer) {
-      resultsContainer.innerHTML = '<div style="text-align:center; color: var(--text-sub); padding:16px; font-size:0.88em;">Aucun résultat trouvé. Réessayez.</div>';
-    }
-    showToast("Aucun résultat trouvé sur YouTube");
-    return;
-  }
-
-  renderYouTubeResults(videos);
 }
 
     // Convertit la durée en secondes au format mm:ss
@@ -1487,26 +1472,73 @@ async function searchYouTube() {
 
     // Rendu HTML des cartes de vidéos YouTube
     function renderYouTubeResults(videos) {
-      const container = document.getElementById('yt-results-list');
-      if (!container) return;
+  const container = document.getElementById('yt-results-list');
+  if (!container) return;
 
-      container.innerHTML = videos.map(v => `
-    <div class="yt-card">
-      <div class="yt-thumb-wrapper">
-        <img src="${v.thumbnail}" class="yt-thumb" alt="" loading="lazy" onError="this.src='https://i.ytimg.com/vi/${v.id}/hqdefault.jpg'">
-        ${v.duration ? `<span class="yt-duration-badge">${v.duration}</span>` : ''}
-      </div>
-      <div class="yt-info">
-        <div class="yt-title">${escapeHtml(v.title)}</div>
-      </div>
-      <button onclick="playYouTubeVideo('${v.id}', '${escapeJs(v.title)}')" class="btn btn-accent yt-play-btn">▶️ Lire</button>
-    </div>
-  `).join('');
-    }
+  container.innerHTML = ''; // Vide le conteneur
 
-    function escapeHtml(str) {
-      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
+  videos.forEach(video => {
+    // Décode les entités HTML envoyées par l'API YouTube (ex: &#39; -> ')
+    const cleanTitle = decodeHtml(video.title);
+
+    // Conteneur principal de l'élément
+    const item = document.createElement('div');
+    item.className = 'yt-result-item';
+    item.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:8px;';
+
+    // Miniature
+    const img = document.createElement('img');
+    img.src = video.thumbnail;
+    img.alt = '';
+    img.style.cssText = 'width:80px; height:45px; object-fit:cover; border-radius:4px;';
+
+    // Bloc texte
+    const titleWrapper = document.createElement('div');
+    titleWrapper.style.cssText = 'flex:1; min-width:0;';
+
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = 'font-weight:bold; font-size:0.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+    titleEl.textContent = cleanTitle; // Affiche proprement tous les caractères (&, <, >, ', ")
+
+    titleWrapper.appendChild(titleEl);
+
+    // Bouton lire
+    const btn = document.createElement('button');
+    btn.className = 'yt-play-btn';
+    btn.style.cssText = 'padding:6px 12px; cursor:pointer;';
+    btn.textContent = 'Lire';
+
+    // Événement clic totalement sécurisé
+    btn.addEventListener('click', () => {
+      playYouTubeVideo(video.id, cleanTitle);
+    });
+
+    // Assemblage
+    item.appendChild(img);
+    item.appendChild(titleWrapper);
+    item.appendChild(btn);
+
+    container.appendChild(item);
+  });
+}
+
+// Fonction utilitaire pour convertir les entités HTML de l'API YouTube
+function decodeHtml(html) {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+}
+
+// Helper pour éviter les injections XSS / HTML cassé dans l'affichage
+function escapeHtml(str) {
+  return (str || '').replace(/[&<>"']/g, match => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[match]);
+}
 
     function escapeJs(str) {
       return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
@@ -1693,9 +1725,14 @@ async function searchYouTube() {
 
     window.addEventListener('DOMContentLoaded', () => {
       const savedId = localStorage.getItem('bbox_peer_target_id');
+      const apiKey = localStorage.getItem('bbox_google_api_key');
       if (savedId) {
         peerTargetId = savedId;
         document.getElementById('peer-id-input').value = savedId;
+      }
+      if (apiKey) {
+        apiKeyId = apiKey;
+        document.getElementById('google-api-input').value = apiKey;
       }
       initPeerJS();
     });
