@@ -1390,94 +1390,92 @@
       }
     }
 
-    async function searchYouTube() {
-      const queryInput = document.getElementById('yt-search-input');
-      const query = queryInput ? queryInput.value.trim() : '';
+async function searchYouTube() {
+  const queryInput = document.getElementById('yt-search-input');
+  const query = queryInput ? queryInput.value.trim() : '';
 
-      if (!query) {
-        showToast("Saisissez un mot-clé pour chercher sur YouTube");
-        return;
-      }
+  if (!query) {
+    showToast("Saisissez un mot-clé pour chercher sur YouTube");
+    return;
+  }
 
-      triggerHaptic(20);
-      const resultsContainer = document.getElementById('yt-results-list');
-      const loader = document.getElementById('yt-search-loader');
+  triggerHaptic(20);
+  const resultsContainer = document.getElementById('yt-results-list');
+  const loader = document.getElementById('yt-search-loader');
 
-      if (resultsContainer) resultsContainer.innerHTML = '';
-      if (loader) loader.style.display = 'flex';
+  if (resultsContainer) resultsContainer.innerHTML = '';
+  if (loader) loader.style.display = 'flex';
 
-      // Variantes de recherche (avec accents et sans accents pour la compatibilité)
-      const cleanQuery = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const searchQueries = Array.from(new Set([query, cleanQuery]));
+  // Variantes de recherche (avec et sans accents)
+  const cleanQuery = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const searchQueries = Array.from(new Set([query, cleanQuery]));
 
-      // Liste d'instances API actives avec repli automatique (Piped & Invidious)
-      const instances = [
-        { url: (q) => `https://api.piped.video/search?q=${q}&filter=videos`, type: 'piped' },
-        { url: (q) => `https://pipedapi.kavin.rocks/search?q=${q}&filter=videos`, type: 'piped' },
-        { url: (q) => `https://yewtu.be/api/v1/search?q=${q}&type=video`, type: 'invidious' },
-        { url: (q) => `https://inv.nadeko.net/api/v1/search?q=${q}&type=video`, type: 'invidious' },
-        { url: (q) => `https://invidious.nerdvpn.de/api/v1/search?q=${q}&type=video`, type: 'invidious' }
-      ];
+  // Endpoints API publics autorisant le CORS et le fetch direct
+  const endpoints = [
+    { url: (q) => `https://vid.puffyan.us/api/v1/search?q=${q}&type=video`, type: 'invidious' },
+    { url: (q) => `https://inv.tux.pizza/api/v1/search?q=${q}&type=video`, type: 'invidious' },
+    { url: (q) => `https://api.piped.private.coffee/search?q=${q}&filter=videos`, type: 'piped' },
+    { url: (q) => `https://pipedapi.drgns.space/search?q=${q}&filter=videos`, type: 'piped' }
+  ];
 
-      let videos = [];
+  let videos = [];
 
-      // Parcourir les requêtes et les instances jusqu'à obtenir des résultats
-      for (const qStr of searchQueries) {
-        const encodedQ = encodeURIComponent(qStr);
+  for (const qStr of searchQueries) {
+    const encodedQ = encodeURIComponent(qStr);
 
-        for (const inst of instances) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s max par serveur
+    for (const ep of endpoints) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 secondes de délai
 
-            const response = await fetch(inst.url(encodedQ), { signal: controller.signal });
-            clearTimeout(timeoutId);
+        const response = await fetch(ep.url(encodedQ), { signal: controller.signal });
+        clearTimeout(timeoutId);
 
-            if (!response.ok) continue;
-            const data = await response.json();
+        if (!response.ok) continue;
+        const data = await response.json();
 
-            if (inst.type === 'invidious' && Array.isArray(data)) {
-              videos = data.filter(item => item.type === 'video' || item.videoId).map(item => ({
-                id: item.videoId,
-                title: item.title,
-                thumbnail: item.videoThumbnails && item.videoThumbnails.length > 0
-                  ? item.videoThumbnails[0].url
-                  : `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
-                duration: formatDurationSeconds(item.lengthSeconds)
-              }));
-            } else if (inst.type === 'piped' && data.items && Array.isArray(data.items)) {
-              videos = data.items.filter(item => item.type === 'stream' || item.url).map(item => {
-                const vId = item.url ? item.url.replace('/watch?v=', '') : '';
-                return {
-                  id: vId,
-                  title: item.title,
-                  thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
-                  duration: formatDurationSeconds(item.duration)
-                };
-              });
-            }
-
-            if (videos.length > 0) break; // Recherche réussie !
-          } catch (err) {
-            console.warn("Échec d'une instance YouTube :", err);
-          }
+        if (ep.type === 'invidious' && Array.isArray(data)) {
+          videos = data.filter(item => item.videoId && item.title).map(item => ({
+            id: item.videoId,
+            title: item.title,
+            thumbnail: item.videoThumbnails && item.videoThumbnails.length > 0
+              ? item.videoThumbnails[0].url
+              : `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
+            duration: formatDurationSeconds(item.lengthSeconds)
+          }));
+        } else if (ep.type === 'piped' && data.items && Array.isArray(data.items)) {
+          videos = data.items.filter(item => item.type === 'stream' || item.url).map(item => {
+            const vId = item.url ? item.url.replace('/watch?v=', '') : '';
+            return {
+              id: vId,
+              title: item.title,
+              thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`,
+              duration: formatDurationSeconds(item.duration)
+            };
+          });
         }
 
-        if (videos.length > 0) break;
+        if (videos.length > 0) break; // Recherche réussie
+      } catch (err) {
+        console.warn("Échec d'un endpoint YouTube :", err);
       }
-
-      if (loader) loader.style.display = 'none';
-
-      if (videos.length === 0) {
-        if (resultsContainer) {
-          resultsContainer.innerHTML = '<div style="text-align:center; color: var(--text-sub); padding:16px; font-size:0.88em;">Aucun résultat trouvé. Vérifiez la connexion ou réessayez.</div>';
-        }
-        showToast("Aucun résultat trouvé sur YouTube");
-        return;
-      }
-
-      renderYouTubeResults(videos);
     }
+
+    if (videos.length > 0) break;
+  }
+
+  if (loader) loader.style.display = 'none';
+
+  if (videos.length === 0) {
+    if (resultsContainer) {
+      resultsContainer.innerHTML = '<div style="text-align:center; color: var(--text-sub); padding:16px; font-size:0.88em;">Aucun résultat trouvé. Réessayez.</div>';
+    }
+    showToast("Aucun résultat trouvé sur YouTube");
+    return;
+  }
+
+  renderYouTubeResults(videos);
+}
 
     // Convertit la durée en secondes au format mm:ss
     function formatDurationSeconds(secs) {
