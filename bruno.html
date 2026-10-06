@@ -1028,7 +1028,24 @@
       </div>
     </section>
 
-    <!-- ONGLET 5: VISIO -->
+    <!-- ONGLET 5: RADIO -->
+    <section id="tab-radio" class="tab-panel">
+      <div class="card" style="padding: 12px;">
+        <div class="card-title">📻 Radio</div>
+        <ul id="radio-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+
+        <div style="margin-top: 12px;">
+          <div class="grid-row" style="margin-bottom: 6px;">
+            <button onclick="sendVideoCmd('mute')" class="btn" id="media-mute-btn">🔇 Mute</button>
+          </div>
+          <label class="hint" for="media-volume">Volume du réveil</label>
+          <input type="range" id="media-volume" class="range-input" min="0" max="100" value="100"
+            oninput="onVolumeInput(this.value)">
+        </div>
+      </div>
+    </section>
+
+    <!-- ONGLET 6: VISIO -->
     <section id="tab-visio" class="tab-panel">
       <div class="card" style="padding: 12px;">
         <div class="card-title">📹 Appel Visio</div>
@@ -1075,6 +1092,10 @@
       <span class="tab-icon">🎬</span>
       <span>Média</span>
     </button>
+    <button class="nav-tab" onclick="switchTab('tab-radio', this)">
+      <span class="tab-icon">📻</span>
+      <span>Radio</span>
+    </button>
     <button class="nav-tab" onclick="switchTab('tab-visio', this)">
       <span class="tab-icon">📹</span>
       <span>Visio</span>
@@ -1102,6 +1123,20 @@
     let isMicMuted = false;
     let isRemoteSoundMuted = false;
     let isSplitMode = false;
+
+    let listRadio = [
+      { name: "RTL", url: "http://icecast.rtl.fr/rtl-1-44-128" },
+      { name: "Nostalgie", url: "https://streaming.nrjaudio.fm/oug7girb92oc?origine=fluxradios" },
+      { name: "Nostalgie Chansons Françaises", url: "https://streaming.nrjaudio.fm/ou3ci9uizv6i" },
+      { name: "France Inter", url: "https://direct.franceinter.fr/live/franceinter-midfi.mp3" },
+      { name: "France Info", url: "https://direct.franceinfo.fr/live/franceinfo-midfi.mp3" },
+      { name: "France Bleu Nord", url: "https://direct.francebleu.fr/live/fbnord-midfi.mp3" },
+      { name: "France Musique", url: "https://direct.francemusique.fr/live/francemusique-midfi.mp3" },
+      { name: "Europe 1", url: "https://stream.europe1.fr/europe1.mp3" },
+      { name: "NRJ", url: "https://cdn.nrjaudio.fm/audio1/fr/30001/mp3_128.mp3" },
+      { name: "RMC", url: "https://audio.bfmtv.com/rmcradio_128.mp3" },
+      { name: "Radio Club", url: "https://stunnel1.cyber-streaming.com:9128/listen.mp3" }
+    ];
 
     // Vibrations tactiles optimisées smartphone
     function triggerHaptic(duration = 15) {
@@ -1413,54 +1448,54 @@
     }
 
     async function searchYouTube() {
-  const queryInput = document.getElementById('yt-search-input');
-  const query = queryInput ? queryInput.value.trim() : '';
+      const queryInput = document.getElementById('yt-search-input');
+      const query = queryInput ? queryInput.value.trim() : '';
 
-  if (!query) {
-    showToast("Saisissez un mot-clé pour chercher sur YouTube");
-    return;
-  }
-
-  triggerHaptic(20);
-  const resultsContainer = document.getElementById('yt-results-list');
-  const loader = document.getElementById('yt-search-loader');
-
-  if (resultsContainer) resultsContainer.innerHTML = '';
-  if (loader) loader.style.display = 'flex';
-
-  try {
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKeyId}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Erreur HTTP : ${response.status}`);
-    }
-
-    const data = await response.json();
-    const videos = (data.items || []).map(item => ({
-      id: item.id.videoId,
-      title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-      duration: ''
-    }));
-
-    if (loader) loader.style.display = 'none';
-
-    if (videos.length === 0) {
-      if (resultsContainer) {
-        resultsContainer.innerHTML = '<div style="text-align:center; color: var(--text-sub); padding:16px;">Aucun résultat trouvé.</div>';
+      if (!query) {
+        showToast("Saisissez un mot-clé pour chercher sur YouTube");
+        return;
       }
-      return;
+
+      triggerHaptic(20);
+      const resultsContainer = document.getElementById('yt-results-list');
+      const loader = document.getElementById('yt-search-loader');
+
+      if (resultsContainer) resultsContainer.innerHTML = '';
+      if (loader) loader.style.display = 'flex';
+
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKeyId}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP : ${response.status}`);
+        }
+
+        const data = await response.json();
+        const videos = (data.items || []).map(item => ({
+          id: item.id.videoId,
+          title: item.snippet.title,
+          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+          duration: ''
+        }));
+
+        if (loader) loader.style.display = 'none';
+
+        if (videos.length === 0) {
+          if (resultsContainer) {
+            resultsContainer.innerHTML = '<div style="text-align:center; color: var(--text-sub); padding:16px;">Aucun résultat trouvé.</div>';
+          }
+          return;
+        }
+
+        renderYouTubeResults(videos);
+
+      } catch (err) {
+        console.error("Erreur de recherche YouTube :", err);
+        if (loader) loader.style.display = 'none';
+        showToast("Erreur lors de la recherche YouTube");
+      }
     }
-
-    renderYouTubeResults(videos);
-
-  } catch (err) {
-    console.error("Erreur de recherche YouTube :", err);
-    if (loader) loader.style.display = 'none';
-    showToast("Erreur lors de la recherche YouTube");
-  }
-}
 
     // Convertit la durée en secondes au format mm:ss
     function formatDurationSeconds(secs) {
@@ -1472,73 +1507,73 @@
 
     // Rendu HTML des cartes de vidéos YouTube
     function renderYouTubeResults(videos) {
-  const container = document.getElementById('yt-results-list');
-  if (!container) return;
+      const container = document.getElementById('yt-results-list');
+      if (!container) return;
 
-  container.innerHTML = ''; // Vide le conteneur
+      container.innerHTML = ''; // Vide le conteneur
 
-  videos.forEach(video => {
-    // Décode les entités HTML envoyées par l'API YouTube (ex: &#39; -> ')
-    const cleanTitle = decodeHtml(video.title);
+      videos.forEach(video => {
+        // Décode les entités HTML envoyées par l'API YouTube (ex: &#39; -> ')
+        const cleanTitle = decodeHtml(video.title);
 
-    // Conteneur principal de l'élément
-    const item = document.createElement('div');
-    item.className = 'yt-result-item';
-    item.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:8px;';
+        // Conteneur principal de l'élément
+        const item = document.createElement('div');
+        item.className = 'yt-result-item';
+        item.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:8px;';
 
-    // Miniature
-    const img = document.createElement('img');
-    img.src = video.thumbnail;
-    img.alt = '';
-    img.style.cssText = 'width:80px; height:45px; object-fit:cover; border-radius:4px;';
+        // Miniature
+        const img = document.createElement('img');
+        img.src = video.thumbnail;
+        img.alt = '';
+        img.style.cssText = 'width:80px; height:45px; object-fit:cover; border-radius:4px;';
 
-    // Bloc texte
-    const titleWrapper = document.createElement('div');
-    titleWrapper.style.cssText = 'flex:1; min-width:0;';
+        // Bloc texte
+        const titleWrapper = document.createElement('div');
+        titleWrapper.style.cssText = 'flex:1; min-width:0;';
 
-    const titleEl = document.createElement('div');
-    titleEl.style.cssText = 'font-weight:bold; font-size:0.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-    titleEl.textContent = cleanTitle; // Affiche proprement tous les caractères (&, <, >, ', ")
+        const titleEl = document.createElement('div');
+        titleEl.style.cssText = 'font-weight:bold; font-size:0.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+        titleEl.textContent = cleanTitle; // Affiche proprement tous les caractères (&, <, >, ', ")
 
-    titleWrapper.appendChild(titleEl);
+        titleWrapper.appendChild(titleEl);
 
-    // Bouton lire
-    const btn = document.createElement('button');
-    btn.className = 'yt-play-btn';
-    btn.style.cssText = 'padding:6px 12px; cursor:pointer;';
-    btn.textContent = 'Lire';
+        // Bouton lire
+        const btn = document.createElement('button');
+        btn.className = 'yt-play-btn';
+        btn.style.cssText = 'padding:6px 12px; cursor:pointer;';
+        btn.textContent = 'Lire';
 
-    // Événement clic totalement sécurisé
-    btn.addEventListener('click', () => {
-      playYouTubeVideo(video.id, cleanTitle);
-    });
+        // Événement clic totalement sécurisé
+        btn.addEventListener('click', () => {
+          playYouTubeVideo(video.id, cleanTitle);
+        });
 
-    // Assemblage
-    item.appendChild(img);
-    item.appendChild(titleWrapper);
-    item.appendChild(btn);
+        // Assemblage
+        item.appendChild(img);
+        item.appendChild(titleWrapper);
+        item.appendChild(btn);
 
-    container.appendChild(item);
-  });
-}
+        container.appendChild(item);
+      });
+    }
 
-// Fonction utilitaire pour convertir les entités HTML de l'API YouTube
-function decodeHtml(html) {
-  const txt = document.createElement('textarea');
-  txt.innerHTML = html;
-  return txt.value;
-}
+    // Fonction utilitaire pour convertir les entités HTML de l'API YouTube
+    function decodeHtml(html) {
+      const txt = document.createElement('textarea');
+      txt.innerHTML = html;
+      return txt.value;
+    }
 
-// Helper pour éviter les injections XSS / HTML cassé dans l'affichage
-function escapeHtml(str) {
-  return (str || '').replace(/[&<>"']/g, match => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  })[match]);
-}
+    // Helper pour éviter les injections XSS / HTML cassé dans l'affichage
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, match => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[match]);
+    }
 
     function escapeJs(str) {
       return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
@@ -1723,6 +1758,41 @@ function escapeHtml(str) {
       sendBboxCmd('restart_app');
     }
 
+    function loadRadioList() {
+      const listEl = document.getElementById('radio-list');
+      if (!listEl) return;
+
+      listEl.innerHTML = '';
+      listRadio.forEach((station, index) => {
+        const li = document.createElement('li');
+        li.style.cssText = 'margin-bottom: 6px;';
+
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.style.cssText = 'width:100%; text-align:left; padding:8px;';
+        btn.textContent = `📻 ${station.name}`;
+        btn.addEventListener('click', () => {
+          sendVideoCmd('playRadioStream', { url: station.url, title: station.name });
+          sendBboxCmd(`radio_play:${station.url}`);
+          showToast(`Radio : ${station.name}`);
+        });
+
+        li.appendChild(btn);
+        listEl.appendChild(li);
+      });
+
+      //bouton pour stopper la radio
+      const stopBtn = document.createElement('button');
+      stopBtn.className = 'btn btn-power';
+      stopBtn.style.cssText = 'width:100%; text-align:left; padding:8px;';
+      stopBtn.textContent = `⏹️ Stop`;
+      stopBtn.addEventListener('click', () => {
+        sendVideoCmd('stop');
+        showToast(`Radio arrêtée`);
+      });
+      listEl.appendChild(stopBtn);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const savedId = localStorage.getItem('bbox_peer_target_id');
       const apiKey = localStorage.getItem('bbox_google_api_key');
@@ -1734,6 +1804,7 @@ function escapeHtml(str) {
         apiKeyId = apiKey;
         document.getElementById('google-api-input').value = apiKey;
       }
+      loadRadioList();
       initPeerJS();
     });
   </script>
