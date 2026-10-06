@@ -494,30 +494,53 @@
         <p class="hint">Le RM4 capte le signal de la télécommande physique. Node.js l'enregistre puis le rejoue. Rien
           n'est "appris" dans l'appli Broadlink.</p>
         <label for="learn-key-select" style="font-size: 0.85em; color: #ccc; display: block; margin-bottom: 6px;">Touche
-          à capturer :</label>
+          à capturer TV Salon :</label>
         <select id="learn-key-select" class="select-input" style="width: 100%; margin-bottom: 10px;">
-          <option value="tv_power">🔴 TV Power</option>
-          <option value="tv_input">🔌 Input / Source</option>
-          <option value="tv_menu">📋 Menu</option>
-          <option value="tv_return">🔙 Retour</option>
-          <option value="tv_ok">🆗 OK</option>
-          <option value="tv_up">▲ Flèche Haut</option>
-          <option value="tv_down">▼ Flèche Bas</option>
-          <option value="tv_left">◄ Flèche Gauche</option>
-          <option value="tv_right">► Flèche Droite</option>
-          <option value="tv_vol_up">🔊 Vol +</option>
-          <option value="tv_vol_down">🔈 Vol -</option>
-          <option value="tv_mute">🔇 Mute</option>
-          <option value="tv_0">0</option>
-          <option value="tv_1">1</option>
-          <option value="tv_2">2</option>
-          <option value="tv_3">3</option>
-          <option value="tv_4">4</option>
-          <option value="tv_5">5</option>
-          <option value="tv_6">6</option>
-          <option value="tv_7">7</option>
-          <option value="tv_8">8</option>
-          <option value="tv_9">9</option>
+          <option value="tv_power">Salon 🔴 TV Power</option>
+          <option value="tv_input">Salon🔌 Input / Source</option>
+          <option value="tv_menu">Salon📋 Menu</option>
+          <option value="tv_return">Salon 🔙 Retour</option>
+          <option value="tv_ok">Salon 🆗 OK</option>
+          <option value="tv_up">Salon ▲ Flèche Haut</option>
+          <option value="tv_down">Salon ▼ Flèche Bas</option>
+          <option value="tv_left">Salon ◄ Flèche Gauche</option>
+          <option value="tv_right">Salon ► Flèche Droite</option>
+          <option value="tv_vol_up">Salon 🔊 Vol +</option>
+          <option value="tv_vol_down">Salon 🔈 Vol -</option>
+          <option value="tv_mute">Salon 🔇 Mute</option>
+          <option value="tv_0">Salon 0</option>
+          <option value="tv_1">Salon 1</option>
+          <option value="tv_2">Salon 2</option>
+          <option value="tv_3">Salon 3</option>
+          <option value="tv_4">Salon 4</option>
+          <option value="tv_5">Salon 5</option>
+          <option value="tv_6">Salon 6</option>
+          <option value="tv_7">Salon 7</option>
+          <option value="tv_8">Salon 8</option>
+          <option value="tv_9">Salon 9</option>
+
+          <option value="tv_power_chambre">Chambre 🔴 TV Power</option>
+          <option value="tv_input_chambre">Chambre🔌 Input / Source</option>
+          <option value="tv_menu_chambre">Chambre📋 Menu</option>
+          <option value="tv_return_chambre">Chambre 🔙 Retour</option>
+          <option value="tv_ok_chambre">Chambre 🆗 OK</option>
+          <option value="tv_up_chambre">Chambre ▲ Flèche Haut</option>
+          <option value="tv_down_chambre">Chambre ▼ Flèche Bas</option>
+          <option value="tv_left_chambre">Chambre ◄ Flèche Gauche</option>
+          <option value="tv_right_chambre">Chambre ► Flèche Droite</option>
+          <option value="tv_vol_up_chambre">Chambre 🔊 Vol +</option>
+          <option value="tv_vol_down_chambre">Chambre 🔈 Vol -</option>
+          <option value="tv_mute_chambre">Chambre 🔇 Mute</option>
+          <option value="tv_0_chambre">Chambre 0</option>
+          <option value="tv_1_chambre">Chambre 1</option>
+          <option value="tv_2_chambre">Chambre 2</option>
+          <option value="tv_3_chambre">Chambre 3</option>
+          <option value="tv_4_chambre">Chambre 4</option>
+          <option value="tv_5_chambre">Chambre 5</option>
+          <option value="tv_6_chambre">Chambre 6</option>
+          <option value="tv_7_chambre">Chambre 7</option>
+          <option value="tv_8_chambre">Chambre 8</option>
+          <option value="tv_9_chambre">Chambre 9</option>
         </select>
         <button onclick="startKeyLearning()" class="btn btn-learn">📡 Capturer ce code IR</button>
         <div id="learned-keys" class="hint" style="margin-top:10px;"></div>
@@ -710,6 +733,59 @@
           <button onclick="sendTvCmd('tv_7')" class="btn">7</button>
           <button onclick="sendTvCmd('tv_8')" class="btn">8</button>
           <button onclick="sendTvCmd('tv_9')" class="btn">9</button>
+          <div></div>
+          <button onclick="sendTvCmd('tv_0')" class="btn">0</button>
+          <div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="category-card" id="cat-tv_chambre">
+      <div class="category-header" onclick="toggleCategory('cat-tv_chambre')">
+        <div class="category-title">
+          <span>🛋️</span> Télécommande TV Chambre
+        </div>
+        <span class="chevron-icon">▼</span>
+      </div>
+      <div class="category-body">
+        <!-- Power & Input / Menu -->
+        <div class="grid-row">
+          <button onclick="sendTvCmd('tv_power_chambre')" class="btn btn-power">🔴 TV Power</button>
+          <button onclick="sendTvCmd('tv_input_chambre')" class="btn" style="background-color: #d35400;">🔌 Input</button>
+          <button onclick="sendTvCmd('tv_menu_chambre')" class="btn" style="background-color: #7f8c8d;">📋 Menu</button>
+          <button onclick="sendTvCmd('tv_return_chambre')" class="btn" style="background-color: #8c7f8d;">🔙 Retour</button>
+        </div>
+
+        <!-- Pavé directionnel TV -->
+        <div class="dpad-container">
+          <div></div>
+          <button onclick="sendTvCmd('tv_up_chambre')" class="btn">▲</button>
+          <div></div>
+          <button onclick="sendTvCmd('tv_left_chambre')" class="btn">◄</button>
+          <button onclick="sendTvCmd('tv_ok_chambre')" class="btn btn-ok">OK</button>
+          <button onclick="sendTvCmd('tv_right_chambre')" class="btn">►</button>
+          <div></div>
+          <button onclick="sendTvCmd('tv_down_chambre')" class="btn">▼</button>
+          <div></div>
+        </div>
+
+        <div class="grid-row">
+          <button onclick="sendTvCmd('tv_vol_down_chambre')" class="btn">🔈 Vol -</button>
+          <button onclick="sendTvCmd('tv_mute_chambre')" class="btn">🔇 Mute</button>
+          <button onclick="sendTvCmd('tv_vol_up_chambre')" class="btn">🔊 Vol +</button>
+        </div>
+
+        <!-- Pavé Numérique -->
+        <div class="grid-numpad">
+          <button onclick="sendTvCmd('tv_1_chambre')" class="btn">1</button>
+          <button onclick="sendTvCmd('tv_2_chambre')" class="btn">2</button>
+          <button onclick="sendTvCmd('tv_3_chambre')" class="btn">3</button>
+          <button onclick="sendTvCmd('tv_4_chambre')" class="btn">4</button>
+          <button onclick="sendTvCmd('tv_5_chambre')" class="btn">5</button>
+          <button onclick="sendTvCmd('tv_6_chambre')" class="btn">6</button>
+          <button onclick="sendTvCmd('tv_7_chambre')" class="btn">7</button>
+          <button onclick="sendTvCmd('tv_8_chambre')" class="btn">8</button>
+          <button onclick="sendTvCmd('tv_9_chambre')" class="btn">9</button>
           <div></div>
           <button onclick="sendTvCmd('tv_0')" class="btn">0</button>
           <div></div>
