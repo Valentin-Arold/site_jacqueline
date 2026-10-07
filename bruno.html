@@ -1079,6 +1079,27 @@
               class="btn btn-accent">Envoyer</button>
           </div>
 
+          <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
+          <div class="card-title" style="font-size: 0.95em; margin-bottom: 8px;">🛒 Panier de Lecture</div>
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <input type="text" id="playlist-url-input" class="peer-input" placeholder="Lien YouTube ou Playlist...">
+            <button onclick="addUrlToPlaylist()" class="btn btn-accent">+</button>
+          </div>
+          
+          <div class="grid-row" style="margin-bottom: 12px;">
+            <button onclick="sendVideoCmd('playPlaylistNow')" class="btn" style="background-color: rgba(46, 204, 113, 0.25); border-color: rgba(46, 204, 113, 0.5); color: #2ecc71;">▶️ Lire tout de suite</button>
+            <button onclick="sendVideoCmd('clearPlaylist')" class="btn btn-power">🗑️ Vider</button>
+            <button onclick="sendVideoCmd('nextTrack')" class="btn" style="background-color: rgba(52, 152, 219, 0.25); border-color: rgba(52, 152, 219, 0.5); color: #3498db;">
+  ⏭️ Piste Suivante
+</button>
+          </div>
+
+          <div id="playlist-queue-container" class="yt-result-list" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 12px;">
+             <div class="hint" style="text-align: center; margin-top: 10px;">Panier vide</div>
+          </div>
+        </div>
+
           <div id="video-file-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;"></div>
         </div>
 
@@ -1222,6 +1243,42 @@
       if (navigator.vibrate) {
         navigator.vibrate(duration);
       }
+    }
+
+    function addUrlToPlaylist() {
+      const input = document.getElementById('playlist-url-input');
+      if (input.value.trim() !== '') {
+          sendVideoCmd('addToPlaylist', { url: input.value.trim() });
+          input.value = '';
+          // Optionnel : Notification pour l'utilisateur
+          if(typeof showToast === 'function') showToast("Ajout au panier en cours...");
+      }
+    }
+
+    function renderPlaylist(playlist, currentIndex) {
+      const container = document.getElementById('playlist-queue-container');
+      if (!playlist || playlist.length === 0) {
+          container.innerHTML = '<div class="hint" style="text-align: center; margin-top: 10px;">Panier vide</div>';
+          return;
+      }
+      
+      let html = '';
+      playlist.forEach((item, index) => {
+          const isPlaying = index === currentIndex;
+          const bg = isPlaying ? 'rgba(52, 152, 219, 0.2)' : 'rgba(255, 255, 255, 0.04)';
+          const border = isPlaying ? '1px solid #3498db' : '1px solid rgba(255, 255, 255, 0.08)';
+          
+          html += `
+          <div class="yt-card" style="background: ${bg}; border: ${border};">
+            <div class="yt-info">
+              <div class="yt-title" style="${isPlaying ? 'color: #3498db;' : ''}">${isPlaying ? '▶ ' : ''}${item.title}</div>
+            </div>
+            <button onclick="sendVideoCmd('playPlaylistItem', { index: ${index} })" class="btn btn-accent" style="min-height: 32px; padding: 4px 8px; font-size: 0.8em;" title="Lire cette piste">▶️</button>
+            <button onclick="sendVideoCmd('removeFromPlaylist', { index: ${index} })" class="btn btn-power" style="min-height: 32px; padding: 4px 8px; font-size: 0.8em;" title="Supprimer">❌</button>
+          </div>
+          `;
+      });
+      container.innerHTML = html;
     }
 
     // Gestion de la navigation par Onglets
@@ -1379,7 +1436,9 @@
           if (Array.isArray(data.codes)) renderLearnedKeys(data.codes);
         } else if (data.type === 'video_state') {
           applyVideoState(data);
-        }
+        } else if (data.type === 'playlist_state') {
+          renderPlaylist(data.playlist, data.currentIndex);
+      }
       });
 
       dataConn.on('close', () => {
