@@ -778,6 +778,29 @@
           <option value="tv_7_chambre">Chambre 7</option>
           <option value="tv_8_chambre">Chambre 8</option>
           <option value="tv_9_chambre">Chambre 9</option>
+
+          <option value="tv_power_reveil">Reveil 🔴 Power</option>
+          <option value="tv_input_reveil">Reveil 🔌 Source</option>
+          <option value="tv_menu_reveil">Reveil 📋 Menu</option>
+          <option value="tv_return_reveil">Reveil 🔙 Retour</option>
+          <option value="tv_ok_reveil">Reveil 🆗 OK</option>
+          <option value="tv_up_reveil">Reveil ▲ Haut</option>
+          <option value="tv_down_reveil">Reveil ▼ Bas</option>
+          <option value="tv_left_reveil">Reveil ◄ Gauche</option>
+          <option value="tv_right_reveil">Reveil ► Droite</option>
+          <option value="tv_vol_up_reveil">Reveil 🔊 Vol +</option>
+          <option value="tv_vol_down_reveil">Reveil 🔈 Vol -</option>
+          <option value="tv_mute_reveil">Reveil 🔇 Mute</option>
+          <option value="tv_0_reveil">Reveil 0</option>
+          <option value="tv_1_reveil">Reveil 1</option>
+          <option value="tv_2_reveil">Reveil 2</option>
+          <option value="tv_3_reveil">Reveil 3</option>
+          <option value="tv_4_reveil">Reveil 4</option>
+          <option value="tv_5_reveil">Reveil 5</option>
+          <option value="tv_6_reveil">Reveil 6</option>
+          <option value="tv_7_reveil">Reveil 7</option>
+          <option value="tv_8_reveil">Reveil 8</option>
+          <option value="tv_9_reveil">Reveil 9</option>
         </select>
         <button onclick="startKeyLearning()" class="btn btn-accent" style="width:100%;">📡 Capturer le code IR</button>
         <div id="learned-keys" class="hint" style="margin-top:8px;"></div>
@@ -955,6 +978,58 @@
       </div>
     </section>
 
+    <!-- ONGLET 3: TV CHAMBRE -->
+    <section id="tab-reveil" class="tab-panel">
+      <div class="card">
+        <div class="card-title">🛏️ TV Chambre</div>
+        <div class="grid-3col" style="margin-bottom: 10px;">
+          <button onclick="sendTvCmd('tv_power_reveil')" class="btn btn-power">🔴 Power</button>
+          <button onclick="sendTvCmd('tv_input_reveil')" class="btn btn-warning">🔌 Source</button>
+          <button onclick="sendTvCmd('tv_menu_reveil')" class="btn">📋 Menu</button>
+        </div>
+        <div class="grid-row" style="margin-bottom: 10px;">
+          <button onclick="sendTvCmd('tv_return_reveil')" class="btn">🔙 Retour</button>
+        </div>
+
+        <!-- D-Pad ergonomique -->
+        <div class="dpad-wrapper">
+          <div class="dpad-cross">
+            <div></div>
+            <button onclick="sendTvCmd('tv_up_reveil')" class="btn dpad-btn">▲</button>
+            <div></div>
+            <button onclick="sendTvCmd('tv_left_reveil')" class="btn dpad-btn">◄</button>
+            <button onclick="sendTvCmd('tv_ok_reveil')" class="btn dpad-btn btn-ok">OK</button>
+            <button onclick="sendTvCmd('tv_right_reveil')" class="btn dpad-btn">►</button>
+            <div></div>
+            <button onclick="sendTvCmd('tv_down_reveil')" class="btn dpad-btn">▼</button>
+            <div></div>
+          </div>
+        </div>
+
+        <div class="grid-row" style="margin-bottom: 12px;">
+          <button onclick="sendTvCmd('tv_vol_down_reveil')" class="btn">🔈 Vol -</button>
+          <button onclick="sendTvCmd('tv_mute_reveil')" class="btn">🔇 Mute</button>
+          <button onclick="sendTvCmd('tv_vol_up_reveil')" class="btn">🔊 Vol +</button>
+        </div>
+
+        <!-- NumPad -->
+        <div class="grid-3col">
+          <button onclick="sendTvCmd('tv_1_reveil')" class="btn">1</button>
+          <button onclick="sendTvCmd('tv_2_reveil')" class="btn">2</button>
+          <button onclick="sendTvCmd('tv_3_reveil')" class="btn">3</button>
+          <button onclick="sendTvCmd('tv_4_reveil')" class="btn">4</button>
+          <button onclick="sendTvCmd('tv_5_reveil')" class="btn">5</button>
+          <button onclick="sendTvCmd('tv_6_reveil')" class="btn">6</button>
+          <button onclick="sendTvCmd('tv_7_reveil')" class="btn">7</button>
+          <button onclick="sendTvCmd('tv_8_reveil')" class="btn">8</button>
+          <button onclick="sendTvCmd('tv_9_reveil')" class="btn">9</button>
+          <div></div>
+          <button onclick="sendTvCmd('tv_0_reveil')" class="btn">0</button>
+          <div></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ONGLET 4: MÉDIA / LECTURE RÉVEIL -->
     <section id="tab-media" class="tab-panel">
       <div class="card">
@@ -1087,6 +1162,10 @@
     <button class="nav-tab" onclick="switchTab('tab-chambre', this)">
       <span class="tab-icon">🛏️</span>
       <span>Chambre</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('tab-reveil', this)">
+      <span class="tab-icon">⏰</span>
+      <span>Réveil</span>
     </button>
     <button class="nav-tab" onclick="switchTab('tab-media', this)">
       <span class="tab-icon">🎬</span>
