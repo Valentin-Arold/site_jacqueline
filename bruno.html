@@ -328,6 +328,12 @@
       gap: 8px;
     }
 
+    .grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
     .channel-input-group {
       display: flex;
       gap: 8px;
@@ -829,6 +835,10 @@
         <div class="grid-row">
           <button onclick="sendBboxCmd('power')" class="btn btn-power">🔴 Power Bbox</button>
         </div>
+        <div class="grid-2col" style="margin-bottom: 10px; margin-top: 10px;">
+          <button onclick="sendBboxCmd('menu')" class="btn">📋 Menu</button>
+          <button onclick="sendBboxCmd('return')" class="btn">🔙 Retour</button>
+        </div>
 
         <!-- D-Pad ergonomique -->
         <div class="dpad-wrapper">
@@ -850,6 +860,12 @@
           <button onclick="sendBboxCmd('vol_down')" class="btn">🔈 Vol -</button>
           <button onclick="sendBboxCmd('mute')" class="btn">🔇 Mute</button>
           <button onclick="sendBboxCmd('vol_up')" class="btn">🔊 Vol +</button>
+        </div>
+
+        <div style="margin-bottom: 12px; background: rgba(255,255,255,0.04); padding: 10px; border-radius: 12px;">
+          <div id="bbox-volume-meta" class="media-meta" style="margin-bottom: 6px;">Volume Bbox : --</div>
+          <input type="range" id="bbox-volume-range" class="range-input" min="0" max="100" value="20"
+            oninput="onBboxVolumeSliderInput(this.value)">
         </div>
 
         <!-- Chaînes rapides -->
@@ -1438,7 +1454,9 @@
           applyVideoState(data);
         } else if (data.type === 'playlist_state') {
           renderPlaylist(data.playlist, data.currentIndex);
-      }
+      } else if (data.type === 'bbox_state') {
+          applyBboxState(data);
+        }
       });
 
       dataConn.on('close', () => {
@@ -1929,6 +1947,24 @@
         showToast(`Radio arrêtée`);
       });
       listEl.appendChild(stopBtn);
+    }
+
+    function onBboxVolumeSliderInput(value) {
+      triggerHaptic(10);
+      if (dataConn && dataConn.open) {
+        dataConn.send({ type: 'bbox_volume', volume: Number(value) });
+      }
+    }
+
+    function applyBboxState(state) {
+      const volEl = document.getElementById('bbox-volume-range');
+      const metaEl = document.getElementById('bbox-volume-meta');
+      if (volEl && typeof state.volume === 'number') {
+        volEl.value = state.volume;
+      }
+      if (metaEl) {
+        metaEl.textContent = `Volume Bbox : ${state.volume}%${state.muted ? ' (Mute)' : ''}`;
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
