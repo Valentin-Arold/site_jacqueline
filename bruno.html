@@ -836,7 +836,7 @@
           <button onclick="sendBboxCmd('power')" class="btn btn-power">🔴 Power Bbox</button>
         </div>
         <div class="grid-2col" style="margin-bottom: 10px; margin-top: 10px;">
-          <button onclick="sendBboxCmd('menu')" class="btn">📋 Menu</button>
+          <button onclick="sendBboxCmd('home')" class="btn">🏠 Maison</button>
           <button onclick="sendBboxCmd('return')" class="btn">🔙 Retour</button>
         </div>
 
@@ -860,12 +860,6 @@
           <button onclick="sendBboxCmd('vol_down')" class="btn">🔈 Vol -</button>
           <button onclick="sendBboxCmd('mute')" class="btn">🔇 Mute</button>
           <button onclick="sendBboxCmd('vol_up')" class="btn">🔊 Vol +</button>
-        </div>
-
-        <div style="margin-bottom: 12px; background: rgba(255,255,255,0.04); padding: 10px; border-radius: 12px;">
-          <div id="bbox-volume-meta" class="media-meta" style="margin-bottom: 6px;">Volume Bbox : --</div>
-          <input type="range" id="bbox-volume-range" class="range-input" min="0" max="100" value="20"
-            oninput="onBboxVolumeSliderInput(this.value)">
         </div>
 
         <!-- Chaînes rapides -->
@@ -943,7 +937,7 @@
     </section>
 
     <!-- ONGLET 3: TV CHAMBRE -->
-    <section id="tab-chambre" class="tab-panel">
+    <!-- <section id="tab-chambre" class="tab-panel">
       <div class="card">
         <div class="card-title">🛏️ TV Chambre</div>
         <div class="grid-3col" style="margin-bottom: 10px;">
@@ -955,7 +949,6 @@
           <button onclick="sendTvCmd('tv_return_chambre')" class="btn">🔙 Retour</button>
         </div>
 
-        <!-- D-Pad ergonomique -->
         <div class="dpad-wrapper">
           <div class="dpad-cross">
             <div></div>
@@ -976,7 +969,6 @@
           <button onclick="sendTvCmd('tv_vol_up_chambre')" class="btn">🔊 Vol +</button>
         </div>
 
-        <!-- NumPad -->
         <div class="grid-3col">
           <button onclick="sendTvCmd('tv_1_chambre')" class="btn">1</button>
           <button onclick="sendTvCmd('tv_2_chambre')" class="btn">2</button>
@@ -992,7 +984,7 @@
           <div></div>
         </div>
       </div>
-    </section>
+    </section> -->
 
     <!-- ONGLET 3: TV CHAMBRE -->
     <section id="tab-reveil" class="tab-panel">
@@ -1053,9 +1045,37 @@
         <p class="hint">Lecture distante sur l'écran du réveil.</p>
 
         <div id="media-title" class="media-meta">Aucune vidéo en cours</div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+          <div id="youtube-download-status" class="hint" style="flex: 1;"></div>
+          <button id="cancel-youtube-download-btn" onclick="cancelYoutubeDownload()" class="btn btn-power"
+            style="display: none; min-height: 34px; padding: 4px 8px;">Annuler</button>
+        </div>
+
+        <div style="margin-top: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
+          <div class="card-title" style="font-size: 0.95em; margin-bottom: 8px;">📁 Films enregistrés</div>
+          <input type="file" id="movie-upload-input" class="peer-input" multiple
+            accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v">
+          <div class="grid-row" style="margin-top: 8px;">
+            <button onclick="uploadMovie()" class="btn btn-accent">⬆️ Envoyer le film</button>
+            <button onclick="refreshMovieList()" class="btn">🔄 Actualiser</button>
+          </div>
+          <div id="movie-upload-status" class="hint" style="margin-top: 8px;"></div>
+          <div id="video-file-list" style="max-height: 270px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 6px;"></div>
+          <div class="card-title" style="font-size: 0.95em; margin: 14px 0 8px;">📋 Playlist films</div>
+          <div class="grid-row" style="margin-bottom: 8px;">
+            <button onclick="sendVideoCmd('movieQueuePlay')" class="btn btn-accent">▶️ Lire la playlist</button>
+            <button onclick="sendVideoCmd('movieQueueClear')" class="btn btn-power">🗑️ Vider</button>
+          </div>
+          <div id="movie-playlist-list" class="yt-result-list" style="max-height: 250px; overflow-y: auto;"></div>
+        </div>
 
         <!-- 1. BOUTONS ET CONTRÔLES EN HAUT -->
         <div style="margin-top: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
+          <div class="grid-row" style="margin-bottom: 8px;">
+            <button onclick="sendVideoCmd('mode', { mode: 'audio' })" class="btn" id="media-audio-mode">🔊 Audio</button>
+            <button onclick="sendVideoCmd('mode', { mode: 'video' })" class="btn btn-accent" id="media-video-mode">🎬 Vidéo</button>
+          </div>
+
           <!-- Boutons de lecture / stop -->
           <div class="grid-row" style="margin-bottom: 8px;">
             <button onclick="sendVideoCmd('playpause')" class="btn btn-accent" id="media-play-btn">▶️ Lecture</button>
@@ -1116,7 +1136,6 @@
           </div>
         </div>
 
-          <div id="video-file-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;"></div>
         </div>
 
         <!-- 2. RECHERCHE YOUTUBE ET RÉSULTATS TOUT EN BAS -->
@@ -1173,6 +1192,8 @@
               title="Micro (Couper/Activer)">🎤</button>
             <button id="visio-sound-btn" class="visio-btn" onclick="toggleRemoteSound()"
               title="Son Distant (Couper/Activer)">🔊</button>
+            <button id="visio-camera-btn" class="visio-btn" onclick="switchCamera()"
+              title="Basculer entre caméra avant et arrière">🔄</button>
             <button id="visio-layout-btn" class="visio-btn" onclick="toggleVisioLayout()"
               title="Changer Mode (Incrustation / Écran Partagé)">📱</button>
             <button id="visio-fullscreen-btn" class="visio-btn" onclick="toggleVisioFullscreen()"
@@ -1196,10 +1217,10 @@
       <span class="tab-icon">🛋️</span>
       <span>Salon</span>
     </button>
-    <button class="nav-tab" onclick="switchTab('tab-chambre', this)">
+    <!-- <button class="nav-tab" onclick="switchTab('tab-chambre', this)">
       <span class="tab-icon">🛏️</span>
       <span>Chambre</span>
-    </button>
+    </button> -->
     <button class="nav-tab" onclick="switchTab('tab-reveil', this)">
       <span class="tab-icon">⏰</span>
       <span>Réveil</span>
@@ -1224,9 +1245,13 @@
   <script>
     let peerTargetId = "reveil-ubuntu-bbox";
     let apiKeyId = "your_api_key_here";
+    let movieUpload = null;
+    let movieUploadQueue = [];
     let peer = null;
     let dataConn = null;
     let localStream = null;
+    let activeMediaCall = null;
+    let cameraFacingMode = 'user';
     let retryTimer = null;
     let applyingRemoteState = false;
     let lastVideoSrc = '';
@@ -1452,10 +1477,39 @@
           if (Array.isArray(data.codes)) renderLearnedKeys(data.codes);
         } else if (data.type === 'video_state') {
           applyVideoState(data);
+        } else if (data.type === 'youtube_download_progress') {
+          const formatMegabytes = (bytes) => `${(Number(bytes || 0) / (1024 * 1024)).toFixed(1)} Mo`;
+          const percent = Math.round(Number(data.percent || 0));
+          document.getElementById('youtube-download-status').textContent =
+            `Téléchargement YouTube : ${percent} % — ${formatMegabytes(data.downloadedBytes)} / ${formatMegabytes(data.totalBytes)}`;
+          document.getElementById('cancel-youtube-download-btn').style.display =
+            percent >= 100 ? 'none' : 'inline-flex';
+        } else if (data.type === 'youtube_download_error') {
+          document.getElementById('youtube-download-status').textContent = '';
+          document.getElementById('cancel-youtube-download-btn').style.display = 'none';
+          showToast(data.error || "Échec du téléchargement YouTube.");
         } else if (data.type === 'playlist_state') {
           renderPlaylist(data.playlist, data.currentIndex);
-      } else if (data.type === 'bbox_state') {
-          applyBboxState(data);
+        } else if (data.type === 'movie_playlist_state') {
+          renderMoviePlaylist(data.playlist, data.currentIndex);
+        } else if (data.type === 'movie_list') {
+          renderVideoList(data.videos);
+        } else if (data.type === 'movie_list_error') {
+          showToast(data.error || "Impossible de charger les films.");
+        } else if (data.type === 'movie_upload_ready') {
+          sendNextMovieChunk(data.uploadId);
+        } else if (data.type === 'movie_upload_chunk_ack') {
+          updateMovieUploadProgress(data.receivedBytes);
+          sendNextMovieChunk(data.uploadId);
+        } else if (data.type === 'movie_upload_complete_ack') {
+          document.getElementById('movie-upload-input').value = '';
+          movieUpload = null;
+          startNextMovieUpload();
+        } else if (data.type === 'movie_upload_error') {
+          movieUpload = null;
+          movieUploadQueue = [];
+          document.getElementById('movie-upload-status').textContent = '';
+          showToast(data.error || "Échec de l'envoi du film.");
         }
       });
 
@@ -1477,7 +1531,7 @@
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
+          video: { facingMode: cameraFacingMode },
           audio: true
         });
 
@@ -1494,6 +1548,7 @@
         callBtn.textContent = "🔄 Connexion visio...";
 
         const mediaCall = peer.call(peerTargetId, localStream);
+        activeMediaCall = mediaCall;
 
         mediaCall.on('stream', (remoteStream) => {
           console.log("Flux vidéo distant reçu !");
@@ -1508,12 +1563,71 @@
         });
 
         mediaCall.on('close', () => {
+          activeMediaCall = null;
           updateStatus('orange', 'Visio terminée');
         });
 
       } catch (err) {
         console.error("Erreur d'accès caméra/micro :", err);
         showToast("Impossible d'accéder à la caméra/micro.");
+      }
+    }
+
+    async function switchCamera() {
+      triggerHaptic();
+      if (!activeMediaCall || !localStream) {
+        showToast("Lancez une visio avant de changer de caméra.");
+        return;
+      }
+
+      const nextFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+      let cameraStream;
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: nextFacingMode } },
+          audio: false
+        });
+      } catch (error) {
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: nextFacingMode } },
+            audio: false
+          });
+        } catch (fallbackError) {
+          console.error("Erreur changement caméra :", fallbackError);
+          showToast("Cette caméra n'est pas disponible.");
+          return;
+        }
+      }
+
+      const newVideoTrack = cameraStream.getVideoTracks()[0];
+      const peerConnection = activeMediaCall.peerConnection ||
+        (activeMediaCall._negotiator && activeMediaCall._negotiator.peerConnection);
+      const sender = peerConnection && peerConnection.getSenders()
+        .find((currentSender) => currentSender.track && currentSender.track.kind === 'video');
+
+      if (!newVideoTrack || !sender) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        showToast("Impossible de remplacer la caméra pendant cet appel.");
+        return;
+      }
+
+      try {
+        await sender.replaceTrack(newVideoTrack);
+        localStream.getVideoTracks().forEach((track) => {
+          localStream.removeTrack(track);
+          track.stop();
+        });
+        localStream.addTrack(newVideoTrack);
+        document.getElementById('local-video').srcObject = localStream;
+        cameraFacingMode = nextFacingMode;
+        document.getElementById('visio-camera-btn').textContent =
+          cameraFacingMode === 'user' ? '🔄' : '📷';
+        showToast(cameraFacingMode === 'user' ? "Caméra avant activée." : "Caméra arrière activée.");
+      } catch (error) {
+        newVideoTrack.stop();
+        console.error("Erreur remplacement caméra :", error);
+        showToast("Le changement de caméra a échoué.");
       }
     }
 
@@ -1780,13 +1894,151 @@
       const list = document.getElementById('video-file-list');
       if (!list) return;
       if (!knownVideos.length) {
-        list.innerHTML = '<p class="hint">Dossier videos/ vide.</p>';
+        list.innerHTML = '<p class="hint">Aucun film enregistré.</p>';
         return;
       }
-      list.innerHTML = knownVideos.map((v) => {
-        const active = v.src === lastVideoSrc ? ' btn-accent' : '';
-        return `<button class="btn${active}" style="justify-content:flex-start;" onclick="playRemoteVideo('${v.src.replace(/'/g, "\\'")}', '${String(v.name).replace(/'/g, "\\'")}')">🎬 ${v.name}</button>`;
-      }).join('');
+      list.replaceChildren();
+      knownVideos.forEach((video) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; gap:6px;';
+
+        const playButton = document.createElement('button');
+        playButton.className = `btn${video.src === lastVideoSrc ? ' btn-accent' : ''}`;
+        playButton.style.cssText = 'flex:1; justify-content:flex-start;';
+        playButton.textContent = `🎬 ${video.name}`;
+        playButton.addEventListener('click', () => playRemoteVideo(video.src, video.name));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-power';
+        deleteButton.textContent = '🗑️';
+        deleteButton.setAttribute('aria-label', `Supprimer ${video.name}`);
+        deleteButton.addEventListener('click', () => deleteMovie(video));
+
+        const addButton = document.createElement('button');
+        addButton.className = 'btn';
+        addButton.textContent = '+';
+        addButton.setAttribute('aria-label', `Ajouter ${video.name} à la playlist`);
+        addButton.addEventListener('click', () => sendVideoCmd('movieQueueAdd', { src: video.src, title: video.name }));
+
+        row.append(playButton, addButton, deleteButton);
+        list.appendChild(row);
+      });
+    }
+
+    function renderMoviePlaylist(playlist, currentIndex) {
+      const list = document.getElementById('movie-playlist-list');
+      if (!list) return;
+      list.replaceChildren();
+      if (!playlist.length) {
+        list.textContent = 'Playlist vide.';
+        list.className = 'hint';
+        return;
+      }
+      list.className = 'yt-result-list';
+      playlist.forEach((movie, index) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; gap:6px; margin-bottom:6px;';
+
+        const playButton = document.createElement('button');
+        playButton.className = `btn${index === currentIndex ? ' btn-accent' : ''}`;
+        playButton.style.cssText = 'flex:1; justify-content:flex-start;';
+        playButton.textContent = `🎬 ${movie.title}`;
+        playButton.addEventListener('click', () => sendVideoCmd('movieQueuePlayItem', { index }));
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn btn-power';
+        removeButton.textContent = '🗑️';
+        removeButton.addEventListener('click', () => sendVideoCmd('movieQueueRemove', { index }));
+
+        row.append(playButton, removeButton);
+        list.appendChild(row);
+      });
+    }
+
+    function refreshMovieList() {
+      sendVideoCmd('list');
+    }
+
+    function uploadMovie() {
+      const input = document.getElementById('movie-upload-input');
+      const status = document.getElementById('movie-upload-status');
+      const files = Array.from(input.files);
+      if (!files.length) {
+        showToast("Sélectionnez au moins un film avant l'envoi.");
+        return;
+      }
+
+      if (!dataConn || !dataConn.open) {
+        showToast("Non connecté.");
+        return;
+      }
+      if (movieUpload || movieUploadQueue.length) {
+        showToast("Un envoi est déjà en cours.");
+        return;
+      }
+
+      movieUploadQueue = files;
+      startNextMovieUpload();
+    }
+
+    function startNextMovieUpload() {
+      if (movieUpload || !movieUploadQueue.length) {
+        if (!movieUpload && !movieUploadQueue.length) {
+          document.getElementById('movie-upload-status').textContent = 'Tous les films sont enregistrés.';
+        }
+        return;
+      }
+
+      const file = movieUploadQueue.shift();
+      const uploadId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      movieUpload = { uploadId, file, offset: 0 };
+      document.getElementById('movie-upload-status').textContent =
+        `Préparation de ${file.name} (${movieUploadQueue.length} restant(s))…`;
+      dataConn.send({
+        type: 'movie_upload_start',
+        uploadId,
+        name: file.name,
+        size: file.size
+      });
+    }
+
+    async function sendNextMovieChunk(uploadId) {
+      if (!movieUpload || movieUpload.uploadId !== uploadId) return;
+      if (!dataConn || !dataConn.open) {
+        movieUpload = null;
+        document.getElementById('movie-upload-status').textContent = '';
+        showToast("Connexion interrompue pendant l'envoi du film.");
+        return;
+      }
+      if (movieUpload.offset >= movieUpload.file.size) {
+        dataConn.send({ type: 'movie_upload_complete', uploadId });
+        return;
+      }
+
+      try {
+        const chunk = await movieUpload.file.slice(movieUpload.offset, movieUpload.offset + 64 * 1024).arrayBuffer();
+        movieUpload.offset += chunk.byteLength;
+        dataConn.send({ type: 'movie_upload_chunk', uploadId, chunk });
+      } catch (error) {
+        movieUpload = null;
+        document.getElementById('movie-upload-status').textContent = '';
+        showToast("Impossible de lire le film sélectionné.");
+      }
+    }
+
+    function updateMovieUploadProgress(receivedBytes) {
+      if (!movieUpload) return;
+      const percent = Math.round((receivedBytes / movieUpload.file.size) * 100);
+      document.getElementById('movie-upload-status').textContent = `Envoi : ${percent} %`;
+    }
+
+    function deleteMovie(video) {
+      if (!window.confirm(`Supprimer « ${video.name} » ?`)) return;
+      if (!dataConn || !dataConn.open) {
+        showToast("Non connecté.");
+        return;
+      }
+      dataConn.send({ type: 'movie_delete', src: video.src });
     }
 
     function applyVideoState(state) {
@@ -1800,12 +2052,16 @@
       const titleEl = document.getElementById('media-title');
       const playBtn = document.getElementById('media-play-btn');
       const muteBtn = document.getElementById('media-mute-btn');
+      const audioModeBtn = document.getElementById('media-audio-mode');
+      const videoModeBtn = document.getElementById('media-video-mode');
       const seek = document.getElementById('media-seek');
       const vol = document.getElementById('media-volume');
 
       if (titleEl) titleEl.textContent = state.title || (state.visible ? 'Lecture en cours' : 'Aucune vidéo');
       if (playBtn) playBtn.textContent = state.playing ? '⏸ Pause' : '▶️ Lecture';
       if (muteBtn) muteBtn.textContent = state.muted ? '🔊 Active Son' : '🔇 Mute';
+      if (audioModeBtn) audioModeBtn.classList.toggle('btn-accent', state.mode !== 'video');
+      if (videoModeBtn) videoModeBtn.classList.toggle('btn-accent', state.mode === 'video');
 
       if (lastDuration > 0) {
         const totalCurrentTime = (state.startTime || 0) + (state.currentTime || 0);
@@ -1836,6 +2092,12 @@
         if (seekReleaseTimer) clearTimeout(seekReleaseTimer);
       }
       dataConn.send(Object.assign({ type: 'video', action }, extra));
+    }
+
+    function cancelYoutubeDownload() {
+      sendVideoCmd('cancelYoutubeDownload');
+      document.getElementById('youtube-download-status').textContent = '';
+      document.getElementById('cancel-youtube-download-btn').style.display = 'none';
     }
 
     function onSeekInput(value) {
@@ -1947,24 +2209,6 @@
         showToast(`Radio arrêtée`);
       });
       listEl.appendChild(stopBtn);
-    }
-
-    function onBboxVolumeSliderInput(value) {
-      triggerHaptic(10);
-      if (dataConn && dataConn.open) {
-        dataConn.send({ type: 'bbox_volume', volume: Number(value) });
-      }
-    }
-
-    function applyBboxState(state) {
-      const volEl = document.getElementById('bbox-volume-range');
-      const metaEl = document.getElementById('bbox-volume-meta');
-      if (volEl && typeof state.volume === 'number') {
-        volEl.value = state.volume;
-      }
-      if (metaEl) {
-        metaEl.textContent = `Volume Bbox : ${state.volume}%${state.muted ? ' (Mute)' : ''}`;
-      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
