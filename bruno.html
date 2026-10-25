@@ -1525,23 +1525,93 @@
       });
     }
 
+    async function getAvailableVideoDevices() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        return [];
+      }
+      try {
+        return await navigator.mediaDevices.enumerateDevices();
+      } catch (error) {
+        console.warn('Impossible de lister les périphériques caméra :', error);
+        return [];
+      }
+    }
+
+    function releaseLocalStream() {
+      if (!localStream) return;
+
+      const tracks = [...localStream.getTracks()];
+      tracks.forEach((track) => {
+        try { track.stop(); } catch (error) { }
+        try { localStream.removeTrack(track); } catch (error) { }
+      });
+
+      localStream = null;
+      const localVideo = document.getElementById('local-video');
+      if (localVideo) {
+        localVideo.srcObject = null;
+      }
+    }
+
     async function getCameraStreamForFacing(targetFacingMode, withAudio = false) {
-      const options = [
-        { video: { facingMode: { ideal: targetFacingMode } }, audio: withAudio },
+      let devices = [];
+      try {
+        devices = await getAvailableVideoDevices();
+      } catch (error) {
+        devices = [];
+      }
+
+      const preferredDevice = devices.find(device =>
+        device.kind === 'videoinput' && device.label && (
+          (targetFacingMode === 'user' && /front|selfie|facial|avant/i.test(device.label)) ||
+          (targetFacingMode === 'environment' && /rear|back|arrière|main|camera/i.test(device.label))
+        )
+      );
+
+      const candidateConstraints = [
+        ...(preferredDevice ? [{ video: { deviceId: { exact: preferredDevice.deviceId } }, audio: withAudio }] : []),
         { video: { facingMode: targetFacingMode }, audio: withAudio },
+        { video: { facingMode: { ideal: targetFacingMode } }, audio: withAudio },
         { video: { facingMode: { exact: targetFacingMode } }, audio: withAudio },
         { video: true, audio: withAudio }
       ];
 
-      for (const constraints of options) {
+      for (const constraints of candidateConstraints) {
         try {
           return await navigator.mediaDevices.getUserMedia(constraints);
         } catch (error) {
-          // On continue vers le prochain jeu de contraintes.
+          // On continue jusqu'à trouver une caméra réellement disponible.
         }
       }
 
       throw new Error('no_camera_available');
+    }
+
+    function attachMediaCallHandlers(mediaCall) {
+      activeMediaCall = mediaCall;
+
+      mediaCall.on('stream', (remoteStream) => {
+        console.log("Flux vidéo distant reçu !");
+        const remoteVideo = document.getElementById('remote-video');
+        remoteVideo.srcObject = remoteStream;
+        remoteVideo.muted = isRemoteSoundMuted;
+
+        const callBtn = document.getElementById('call-btn');
+        if (callBtn) {
+          callBtn.style.backgroundColor = "#c0392b";
+          callBtn.textContent = "🛑 Raccrocher";
+          callBtn.onclick = () => location.reload();
+        }
+
+        updateStatus('green', 'Visio en cours');
+      });
+
+      mediaCall.on('close', () => {
+        if (activeMediaCall === mediaCall) {
+          activeMediaCall = null;
+        }
+        updateStatus('orange', 'Visio terminée');
+      });
     }
 
     async function startCall() {
@@ -1551,7 +1621,6 @@
       try {
         localStream = await getCameraStreamForFacing(cameraFacingMode, true);
 
-        // Appliquer l'état Mute micro initial si configuré
         const audioTracks = localStream.getAudioTracks();
         if (audioTracks.length > 0) {
           audioTracks.forEach(t => t.enabled = !isMicMuted);
@@ -1564,24 +1633,7 @@
         callBtn.textContent = "🔄 Connexion visio...";
 
         const mediaCall = peer.call(peerTargetId, localStream);
-        activeMediaCall = mediaCall;
-
-        mediaCall.on('stream', (remoteStream) => {
-          console.log("Flux vidéo distant reçu !");
-          const remoteVideo = document.getElementById('remote-video');
-          remoteVideo.srcObject = remoteStream;
-          remoteVideo.muted = isRemoteSoundMuted;
-
-          updateStatus('green', 'Visio en cours');
-          callBtn.style.backgroundColor = "#c0392b";
-          callBtn.textContent = "🛑 Raccrocher";
-          callBtn.onclick = () => location.reload();
-        });
-
-        mediaCall.on('close', () => {
-          activeMediaCall = null;
-          updateStatus('orange', 'Visio terminée');
-        });
+        attachMediaCallHandlers(mediaCall);
 
       } catch (err) {
         console.error("Erreur d'accès caméra/micro :", err);
@@ -1589,18 +1641,57 @@
       }
     }
 
+    async function restartCallWithCamera(nextFacingMode) {
+      if (!peer || !peer.open) {
+        showToast("Connexion visio non disponible.");
+        return;
+      }
+
+      const oldCall = activeMediaCall;
+      if (oldCall) {
+        try {
+          oldCall.close();
+        } catch (error) {
+          console.warn('Erreur fermeture ancien appel visio :', error);
+        }
+      }
+
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+
+      try {
+        localStream = await getCameraStreamForFacing(nextFacingMode, true);
+        const audioTracks = localStream.getAudioTracks();
+        if (audioTracks.length > 0) {
+          audioTracks.forEach(track => track.enabled = !isMicMuted);
+        }
+
+        document.getElementById('local-video').srcObject = localStream;
+        const mediaCall = peer.call(peerTargetId, localStream);
+        attachMediaCallHandlers(mediaCall);
+        cameraFacingMode = nextFacingMode;
+        document.getElementById('visio-camera-btn').textContent =
+          cameraFacingMode === 'user' ? '🔄' : '📷';
+        showToast(cameraFacingMode === 'user' ? "Caméra avant activée." : "Caméra arrière activée.");
+      } catch (error) {
+        console.error("Erreur redémarrage visio caméra :", error);
+        showToast("La caméra demandée n'est pas disponible sur ce téléphone.");
+      }
+    }
+
     async function switchCamera() {
       triggerHaptic();
-      if (!activeMediaCall || !localStream) {
+      if (!activeMediaCall) {
         showToast("Lancez une visio avant de changer de caméra.");
         return;
       }
 
       const nextFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
-      let cameraStream;
+      let cameraStream = null;
 
       try {
-        cameraStream = await getCameraStreamForFacing(nextFacingMode, false);
+        cameraStream = await getCameraStreamForFacing(nextFacingMode, true);
       } catch (error) {
         console.error("Erreur changement caméra :", error);
         showToast("Cette caméra n'est pas disponible sur ce téléphone.");
@@ -1615,26 +1706,38 @@
 
       if (!newVideoTrack || !sender) {
         cameraStream.getTracks().forEach((track) => track.stop());
-        showToast("Impossible de remplacer la caméra pendant cet appel.");
+        await restartCallWithCamera(nextFacingMode);
         return;
       }
 
       try {
+        const previousTrack = sender.track;
         await sender.replaceTrack(newVideoTrack);
-        localStream.getVideoTracks().forEach((track) => {
-          localStream.removeTrack(track);
-          track.stop();
-        });
-        localStream.addTrack(newVideoTrack);
+
+        if (localStream) {
+          const oldVideoTracks = localStream.getVideoTracks();
+          oldVideoTracks.forEach((track) => {
+            try { track.stop(); } catch (error) { }
+            try { localStream.removeTrack(track); } catch (error) { }
+          });
+        }
+
+        if (previousTrack && previousTrack !== newVideoTrack) {
+          try { previousTrack.stop(); } catch (error) { }
+        }
+
+        localStream = cameraStream;
         document.getElementById('local-video').srcObject = localStream;
+
+        const actualDeviceLabel = newVideoTrack.label || (nextFacingMode === 'user' ? 'avant' : 'arrière');
         cameraFacingMode = nextFacingMode;
         document.getElementById('visio-camera-btn').textContent =
           cameraFacingMode === 'user' ? '🔄' : '📷';
-        showToast(cameraFacingMode === 'user' ? "Caméra avant activée." : "Caméra arrière activée.");
+        showToast(`Caméra ${actualDeviceLabel} active.`);
       } catch (error) {
-        newVideoTrack.stop();
-        console.error("Erreur remplacement caméra :", error);
-        showToast("Le changement de caméra a échoué.");
+        console.warn('Remplacement direct de piste impossible, redémarrage de la visio avec la nouvelle caméra :', error);
+        try { cameraStream.getTracks().forEach((track) => track.stop()); } catch (e) { }
+        await restartCallWithCamera(nextFacingMode);
       }
     }
 
