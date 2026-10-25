@@ -1525,15 +1525,31 @@
       });
     }
 
+    async function getCameraStreamForFacing(targetFacingMode, withAudio = false) {
+      const options = [
+        { video: { facingMode: { ideal: targetFacingMode } }, audio: withAudio },
+        { video: { facingMode: targetFacingMode }, audio: withAudio },
+        { video: { facingMode: { exact: targetFacingMode } }, audio: withAudio },
+        { video: true, audio: withAudio }
+      ];
+
+      for (const constraints of options) {
+        try {
+          return await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (error) {
+          // On continue vers le prochain jeu de contraintes.
+        }
+      }
+
+      throw new Error('no_camera_available');
+    }
+
     async function startCall() {
       triggerHaptic(25);
       const callBtn = document.getElementById('call-btn');
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: cameraFacingMode },
-          audio: true
-        });
+        localStream = await getCameraStreamForFacing(cameraFacingMode, true);
 
         // Appliquer l'état Mute micro initial si configuré
         const audioTracks = localStream.getAudioTracks();
@@ -1582,22 +1598,13 @@
 
       const nextFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
       let cameraStream;
+
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: nextFacingMode } },
-          audio: false
-        });
+        cameraStream = await getCameraStreamForFacing(nextFacingMode, false);
       } catch (error) {
-        try {
-          cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: nextFacingMode } },
-            audio: false
-          });
-        } catch (fallbackError) {
-          console.error("Erreur changement caméra :", fallbackError);
-          showToast("Cette caméra n'est pas disponible.");
-          return;
-        }
+        console.error("Erreur changement caméra :", error);
+        showToast("Cette caméra n'est pas disponible sur ce téléphone.");
+        return;
       }
 
       const newVideoTrack = cameraStream.getVideoTracks()[0];
@@ -1717,6 +1724,12 @@
       }
     }
 
+    function normalizeYouTubeVideoId(rawId) {
+      if (typeof rawId !== 'string') return null;
+      const id = rawId.trim();
+      return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+    }
+
     async function searchYouTube() {
       const queryInput = document.getElementById('yt-search-input');
       const query = queryInput ? queryInput.value.trim() : '';
@@ -1742,12 +1755,15 @@
         }
 
         const data = await response.json();
-        const videos = (data.items || []).map(item => ({
-          id: item.id.videoId,
-          title: item.snippet.title,
-          thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
-          duration: ''
-        }));
+        const videos = (data.items || [])
+          .map(item => {
+            const id = normalizeYouTubeVideoId(item?.id?.videoId || item?.id || null);
+            if (!id) return null;
+            const title = item?.snippet?.title || 'Vidéo YouTube';
+            const thumbnail = item?.snippet?.thumbnails?.high?.url || item?.snippet?.thumbnails?.default?.url || '';
+            return { id, title, thumbnail, duration: '' };
+          })
+          .filter(Boolean);
 
         if (loader) loader.style.display = 'none';
 
@@ -1851,7 +1867,14 @@
 
     function playYouTubeVideo(id, title) {
       triggerHaptic(20);
-      const ytUrl = `https://www.youtube.com/watch?v=${id}`;
+      const normalizedId = normalizeYouTubeVideoId(id);
+      if (!normalizedId) {
+        showToast("Vidéo YouTube invalide.");
+        console.warn('Tentative de lecture avec un ID YouTube invalide:', id);
+        return;
+      }
+
+      const ytUrl = `https://www.youtube.com/watch?v=${normalizedId}`;
       sendVideoCmd('sendUrl', { url: ytUrl, title: title });
       showToast(`Envoi : ${title}`);
     }
